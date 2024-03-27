@@ -1,0 +1,60 @@
+create database FundooApi
+use FundooApi
+CREATE TABLE Users (
+    UserId INT PRIMARY KEY IDENTITY(1,1),
+    UserFirstName NVARCHAR(50),
+    UserLastName NVARCHAR(50),
+    UserEmail NVARCHAR(100),
+    UserPassword NVARCHAR(100)
+);
+
+select * from Users
+
+CREATE TABLE UserNotes (
+    Id INT PRIMARY KEY IDENTITY,
+    Title NVARCHAR(255),
+    Description NVARCHAR(MAX),
+    Color NVARCHAR(50),
+    ImagePaths NVARCHAR(MAX),
+    Reminder DATETIME,
+    IsArchive BIT,
+    IsPinned BIT,
+    IsTrash BIT
+);
+
+select * from UserNotes
+
+CREATE TABLE Collaborators (
+    CollaboratorId INT PRIMARY KEY IDENTITY,
+    UserId INT NOT NULL,
+    UserNoteId INT NOT NULL,
+    CollaboratorEmail NVARCHAR(255) NOT NULL,
+    -- Add other properties as needed
+
+    CONSTRAINT FK_Collaborators_UserId FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    CONSTRAINT FK_Collaborators_UserNoteId FOREIGN KEY (UserNoteId) REFERENCES UserNotes(Id)
+);
+
+SELECT * FROM Collaborators
+
+SELECT UN.Id, UN.Title, UN.Description, UN.Color, UN.ImagePaths, UN.Reminder, UN.IsArchive, UN.IsPinned, UN.IsTrash
+FROM UserNotes UN
+JOIN Collaborators C ON UN.Id = C.UserNoteId
+WHERE C.CollaboratorId = 1;
+
+CREATE TABLE Labels (
+    LabelId INT PRIMARY KEY IDENTITY,
+    LabelName NVARCHAR(255),
+    UserId INT NOT NULL,
+    NoteId INT NOT NULL,
+
+    CONSTRAINT FK_Labels_UserId FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    CONSTRAINT FK_Labels_NoteId FOREIGN KEY (NoteId) REFERENCES UserNotes(Id)
+);
+
+select * from Labels
+
+SELECT UN.Id AS NoteId, UN.Title, UN.Description, UN.Color, UN.ImagePaths, UN.Reminder, UN.IsArchive, UN.IsPinned, UN.IsTrash
+FROM UserNotes UN
+JOIN Labels L ON UN.Id = L.NoteId
+WHERE L.UserId = 4;
