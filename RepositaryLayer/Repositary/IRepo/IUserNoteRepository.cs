@@ -14,6 +14,8 @@ namespace RepositaryLayer.Repositary.IRepo
         public Task<UserNote> UpdateUserNoteAsync(UserNote note);
         public Task<UserNote> GetUserNoteByIdAsync(int id);
         public Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorIdAsync(int collaboratorId);
+        public Task<bool> DeleteUserNoteByTitleAsync(string title);
+        public Task<int> GetUserNoteIdByTitleAsync(string title);
         // Add other CRUD methods as needed
     }
 }

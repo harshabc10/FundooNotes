@@ -154,6 +154,25 @@ namespace RepositaryLayer.Repositary.RepoImpl
             var userNotes = await connection.QueryAsync<UserNote>(query, new { CollaboratorId = collaboratorId });
             return userNotes.ToList();
         }
+
+        public async Task<bool> DeleteUserNoteByTitleAsync(string title)
+        {
+            string sql = "DELETE FROM UserNotes WHERE Title = @Title";
+
+            using var connection = _context.CreateConnection();
+            int rowsAffected = await connection.ExecuteAsync(sql, new { Title = title });
+
+            return rowsAffected > 0;
+        }
+
+        public async Task<int> GetUserNoteIdByTitleAsync(string title)
+        {
+            // Query to get the UserNoteId by title
+            string query = "SELECT Id FROM UserNotes WHERE Title = @Title";
+            using var connection = _context.CreateConnection();
+            return await connection.ExecuteScalarAsync<int>(query, new { Title = title });
+        }
+
         // Implement other CRUD methods as needed
     }
 }

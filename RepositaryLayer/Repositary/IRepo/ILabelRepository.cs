@@ -15,5 +15,7 @@ namespace RepositaryLayer.Repositary.IRepo
         public Task<int> RemoveLabel(int userId, int noteId);
         public Task<List<Label>> GetUsersLabelsList(int userId);
         public Task<List<UserNote>> GetNotesByUserId(int userId);
+
+        public Task<bool> DeleteLabelsByUserNoteIdAsync(int userNoteId);
     }
 }

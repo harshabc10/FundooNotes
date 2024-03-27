@@ -34,7 +34,7 @@ namespace FundooNotes.Controllers
         public async Task<IActionResult> createUser(UserRequest request)
         {
             
-               return Ok(await service.createUser(request));
+               return Ok($"User create sucessfull : {await service.createUser(request)}");
         }
 
         [HttpGet("Login/{Email}/{password}")]
@@ -46,21 +46,9 @@ namespace FundooNotes.Controllers
             //session creting
             _httpContextAccessor.HttpContext.Session.SetString("UserName", user.FirstName);
 
-            //to create jwt while login
-            /*            var user = await service.Login(Email, password);
-                        if (user.UserEmail != request.Email)
-                        {
-                            return BadRequest("user not found");
-                        }
-                        if (user.UserPassword != request.Password)
-                        {
-                            return BadRequest("wrong password");
-                        }*/
-
             var token = CreateToken(user);
-            return Ok(new {Token = token});
+            return Ok($"Token Generated sucessfully{new {Token = token}}");
 
-          
         }
 
 
@@ -68,7 +56,7 @@ namespace FundooNotes.Controllers
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
-            return Ok( await service.ChangePasswordRequest(Email));
+            return Ok($"{await service.ChangePasswordRequest(Email)}");
         }
 
         [HttpPut("otp/{otp}/{password}")]
@@ -79,7 +67,7 @@ namespace FundooNotes.Controllers
         }
 
         //JWt
-        private string CreateToken(UserResponce user)
+        /*private string CreateToken(UserResponce user)
         {
             List<Claim> claims = new List<Claim>
             {
@@ -100,7 +88,32 @@ namespace FundooNotes.Controllers
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }*/
+
+        private string CreateToken(UserResponce user)
+        {
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, $"{user.FirstName}{user.LastName}")
+    };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
+
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var expires = DateTime.UtcNow.AddHours(1);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: expires,
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
 
 
     }

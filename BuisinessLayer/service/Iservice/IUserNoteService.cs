@@ -16,6 +16,7 @@ namespace BuisinessLayer.service.Iservice
         public Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorIdAsync(int collaboratorId);
 
         public Task<bool> SendCollaboratorMessageAsync(string email);
+        public Task<bool> DeleteUserNoteByTitleAsync(string title);
         // Add other business logic methods as needed
     }
 

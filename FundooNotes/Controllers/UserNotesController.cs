@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using RepositaryLayer.Entity;
 using System;
 using Microsoft.AspNetCore.Authorization;
+using RepositaryLayer.Repositary.IRepo;
+using RepositaryLayer.Repositary.RepoImpl;
 
 namespace FundooNotes.Controllers
 {
@@ -15,10 +17,12 @@ namespace FundooNotes.Controllers
     {
 
         private readonly IUserNoteService _noteService;
+       
 
         public UserNotesController(IUserNoteService noteService)
         {
             _noteService = noteService;
+            
         }
 
         /*        [HttpPost]
@@ -36,7 +40,6 @@ namespace FundooNotes.Controllers
                     }
                 }*/
         [HttpPost]
-        //[Authorize] // Requires JWT authorization
         public async Task<ActionResult<UserNote>> AddUserNoteAsync(UserNote note)
         {
             try
@@ -51,25 +54,25 @@ namespace FundooNotes.Controllers
         }
 
         [HttpDelete("{id}")]
-                public async Task<ActionResult<bool>> DeleteUserNoteAsync(int id)
+        public async Task<ActionResult<bool>> DeleteUserNoteAsync(int id)
+        {
+            try
+            {
+                bool isDeleted = await _noteService.DeleteUserNoteAsync(id);
+                if (isDeleted)
                 {
-                    try
-                    {
-                        bool isDeleted = await _noteService.DeleteUserNoteAsync(id);
-                        if (isDeleted)
-                        {
-                            return Ok(true); // Return 200 OK with true indicating successful deletion
-                        }
-                        else
-                        {
-                            return NotFound(); // Return 404 Not Found if the user note with the given ID was not found
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return StatusCode(500, $"Error deleting user note: {ex.Message}");
-                    }
+                    return Ok(true); // Return 200 OK with true indicating successful deletion
                 }
+                else
+                {
+                    return NotFound(); // Return 404 Not Found if the user note with the given ID was not found
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error deleting user note: {ex.Message}");
+            }
+        }
 
         [HttpPut]
         public async Task<ActionResult<UserNote>> UpdateUserNoteAsync(UserNote note)
@@ -172,7 +175,29 @@ namespace FundooNotes.Controllers
             }
         }
 
-        // Implement other API endpoints as needed
+        [HttpDelete("delete/{title}")]
+        public async Task<ActionResult<bool>> DeleteUserNoteByTitleAsync(string title)
+        {
+            try
+            {
+                bool isDeleted = await _noteService.DeleteUserNoteByTitleAsync(title);
+                if (isDeleted)
+                {
+                    return Ok(true); // Return 200 OK with true indicating successful deletion
+                }
+                else
+                {
+                    return NotFound(); // Return 404 Not Found if the user note with the given title was not found
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error deleting user note by title: {ex.Message}");
+            }
+
+
+            // Implement other API endpoints as needed
+        }
     }
 
 }

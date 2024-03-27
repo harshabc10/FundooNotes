@@ -15,5 +15,6 @@ namespace BuisinessLayer.service.Iservice
         public Task<int> RemoveLabel(int userId, int noteId);
         public Task<List<Label>> GetUsersLabelsList(int userId);
         public Task<List<UserNote>> GetNotesByUserId(int userId);
+       
     }
 }

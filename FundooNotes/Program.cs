@@ -14,6 +14,14 @@ using System.Text;
 using Swashbuckle.AspNetCore.SwaggerGen;
 var builder = WebApplication.CreateBuilder(args);
 
+//redis 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "127.0.0.1:6379"; // Redis server address
+    options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
+});
+
+
 //loggers
 builder.Services.AddLogging(config =>
 {
@@ -58,51 +66,65 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "FundooNotes", Version = "v1" });
-    //For Authorization
-    var securitySchema = new OpenApiSecurityScheme
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Get USerNotes based on ID", Version = "v1" });
+
+    // Define the JWT bearer scheme
+    var securityScheme = new OpenApiSecurityScheme
     {
-        Description = "Using the Authorization header with the Bearer scheme.",
         Name = "Authorization",
-        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme",
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
         Reference = new OpenApiReference
         {
             Type = ReferenceType.SecurityScheme,
-            Id = "Bearer"
+            Id = JwtBearerDefaults.AuthenticationScheme
         }
     };
-    c.AddSecurityDefinition("Bearer", securitySchema);
+
+    c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
+
+    // Require JWT tokens to be passed on requests
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    { securitySchema, new[] { "Bearer" } }
-                });
+    {
+        {
+            securityScheme,
+            Array.Empty<string>()
+        }
+    });
 });
 builder.Services.AddDistributedMemoryCache();
 
 //jwt
 
 // Add JWT authentication
-builder.Services.AddAuthentication(au =>
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]));
+//var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]));
+
+builder.Services.AddAuthentication(options =>
 {
-    au.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    au.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    au.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(jwt => {
-    jwt.RequireHttpsMetadata = true;
-    jwt.SaveToken = true;
-    jwt.TokenValidationParameters = new TokenValidationParameters
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = true; // Set to true in production
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        //Validate the expiration and not before values in the token
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
+        
+        
+        
         ClockSkew = TimeSpan.Zero,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+        IssuerSigningKey = key
     };
 });
 

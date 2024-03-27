@@ -2,6 +2,7 @@
 using Google.Apis.Gmail.v1;
 using RepositaryLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
+using RepositaryLayer.Repositary.RepoImpl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +14,12 @@ namespace BuisinessLayer.service.serviceImpl
     public class UserNoteService : IUserNoteService
     {
         private readonly IUserNoteRepository _noteRepository;
+        private readonly ILabelRepository _labelRepository;
 
-        public UserNoteService(IUserNoteRepository noteRepository)
+        public UserNoteService(IUserNoteRepository noteRepository, ILabelRepository labelRepository)
         {
             _noteRepository = noteRepository;
+            _labelRepository = labelRepository;
         }
 
         public async Task<UserNote> AddUserNoteAsync(UserNote note)
@@ -149,6 +152,23 @@ namespace BuisinessLayer.service.serviceImpl
         public Task<bool> SendCollaboratorMessageAsync(string email)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool> DeleteUserNoteByTitleAsync(string title)
+        {
+            // Get the UserNoteId by title
+            int userNoteId = await _noteRepository.GetUserNoteIdByTitleAsync(title);
+            if (userNoteId == 0)
+            {
+                // User note not found
+                return false;
+            }
+
+            // Delete labels associated with the user note
+            await _labelRepository.DeleteLabelsByUserNoteIdAsync(userNoteId);
+
+            // Delete the user note
+            return await _noteRepository.DeleteUserNoteAsync(userNoteId);
         }
 
         // Implement other business logic methods as needed

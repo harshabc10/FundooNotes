@@ -1,7 +1,9 @@
 ﻿using BuisinessLayer.service.Iservice;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using RepositaryLayer.Entity;
+using System.Text.Json;
 
 namespace FundooNotes.Controllers
 {
@@ -10,10 +12,12 @@ namespace FundooNotes.Controllers
     public class LabelsController : ControllerBase
     {
         private readonly ILabelService _labelService;
+        private readonly IDistributedCache _cache;
 
-        public LabelsController(ILabelService labelService)
+        public LabelsController(ILabelService labelService, IDistributedCache cache)
         {
             _labelService = labelService;
+            _cache = cache;
         }
 
         [HttpPost]
@@ -100,7 +104,7 @@ namespace FundooNotes.Controllers
         }
 
 
-        [HttpGet("{userId}")]
+/*        [HttpGet("{userId}")]
         public async Task<IActionResult> GetUsersLabelsList(int userId)
         {
             try
@@ -113,7 +117,7 @@ namespace FundooNotes.Controllers
                 // Log the exception or handle it as needed
                 return StatusCode(500, $"Error getting user's labels: {ex.Message}");
             }
-        }
+        }*/
 
         [HttpGet("notes/{userId}")]
         public async Task<IActionResult> GetNotesByUserId(int userId)
@@ -135,6 +139,34 @@ namespace FundooNotes.Controllers
                 // Log the exception or handle it as needed
                 return StatusCode(500, $"Error retrieving notes for user ID {userId}: {ex.Message}");
             }
+        }
+
+        //Redis concept
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUsersLabelsList(int userId)
+        {
+            var cacheKey = $"Labels_{userId}";
+            var cachedLabels = await _cache.GetStringAsync(cacheKey);
+
+            if (!string.IsNullOrEmpty(cachedLabels))
+            {
+                // Return cached data if available
+                return Ok(JsonSerializer.Deserialize<List<Label>>(cachedLabels));
+            }
+
+            // Cache data if not already cached
+            var labels = await _labelService.GetUsersLabelsList(userId);
+            if (labels != null)
+            {
+                var cacheOptions = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) // Cache expiration time
+                };
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(labels), cacheOptions);
+                return Ok(labels);
+            }
+
+            return NotFound("No labels found for the specified user ID.");
         }
 
     }

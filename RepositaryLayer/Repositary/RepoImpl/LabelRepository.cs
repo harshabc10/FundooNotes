@@ -1,4 +1,6 @@
-﻿using Dapper;
+﻿using BuisinessLayer.Entity;
+using Dapper;
+using Microsoft.Data.SqlClient;
 using RepositaryLayer.Context;
 using RepositaryLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
@@ -20,9 +22,19 @@ namespace RepositaryLayer.Repositary.RepoImpl
 
         public async Task<int> CreateLabel(Label label)
         {
-            // Implement logic to insert a new label into the database
             using (var connection = _context.CreateConnection())
             {
+                // Check if the NoteId exists in the UserNotes table
+                var note = await connection.QueryFirstOrDefaultAsync<UserNote>(
+                    "SELECT * FROM UserNotes WHERE Id = @NoteId", new { NoteId = label.NoteId });
+
+                if (note == null)
+                {
+                    // NoteId does not exist in UserNotes table, handle error or return appropriate response
+                    return 0; // Return 0 indicating failure
+                }
+
+                // NoteId exists, proceed with inserting the label
                 string query = "INSERT INTO Labels (LabelName, UserId, NoteId) VALUES (@LabelName, @UserId, @NoteId)";
                 return await connection.ExecuteAsync(query, label);
             }
@@ -75,6 +87,19 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 string query = "SELECT UN.Id AS NoteId, UN.Title, UN.Description, UN.Color, UN.ImagePaths, UN.Reminder," +
                     " UN.IsArchive, UN.IsPinned, UN.IsTrash\r\nFROM UserNotes UN\r\nJOIN Labels L ON UN.Id = L.NoteId\r\nWHERE L.UserId = @UserId;";
                 return (await connection.QueryAsync<UserNote>(query, new { UserId = userId })).ToList();
+            }
+        }
+        public async Task<bool> DeleteLabelsByUserNoteIdAsync(int userNoteId)
+        {
+            using (var connection = _context.CreateConnection())
+            {
+                //await connection.OpenAsync(); // Open the SqlConnection asynchronously
+
+                var affectedRows = await connection.ExecuteAsync(
+                    "DELETE FROM Labels WHERE NoteId = @UserNoteId",
+                    new { UserNoteId = userNoteId });
+
+                return affectedRows > 0;
             }
         }
     }
