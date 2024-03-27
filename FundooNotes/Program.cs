@@ -14,7 +14,7 @@ using System.Text;
 using Swashbuckle.AspNetCore.SwaggerGen;
 var builder = WebApplication.CreateBuilder(args);
 
-//redis 
+//redis concept
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = "127.0.0.1:6379"; // Redis server address
