@@ -127,7 +127,6 @@ namespace FundooNotes.Controllers
             }
         }
 
-
         [HttpPost("addcollaborator")]
         public async Task<IActionResult> AddCollaboratorAsync([FromBody] string email)
         {

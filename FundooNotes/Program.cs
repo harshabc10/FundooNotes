@@ -12,12 +12,45 @@ using RepositaryLayer.Repositary.RepoImpl;
 using System.Net.Mail;
 using System.Text;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Confluent.Kafka;
+using Microsoft.AspNetCore.Hosting;
 var builder = WebApplication.CreateBuilder(args);
 
+
+//kafka implementations
+
+// Register the ApacheKafkaConsumerService as a singleton hosted service
+builder.Services.AddSingleton<IProducer<string, string>>(sp =>
+{
+    var producerConfig = new ProducerConfig
+    {
+        BootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
+    };
+    return new ProducerBuilder<string, string>(producerConfig).Build();
+});
+
+builder.Services.AddSingleton<IConsumer<string, string>>(sp =>
+{
+    var consumerConfig = new ConsumerConfig
+    {
+        BootstrapServers = builder.Configuration["Kafka:BootstrapServers"],
+        GroupId = builder.Configuration["Kafka:ConsumerGroupId"],
+        AutoOffsetReset = AutoOffsetReset.Earliest
+    };
+    return new ConsumerBuilder<string, string>(consumerConfig).Build();
+});
+
 //redis concept
-builder.Services.AddStackExchangeRedisCache(options =>
+/*builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = "127.0.0.1:6379"; // Redis server address
+    options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
+   
+});*/
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    IConfigurationSection redisCacheSection = builder.Configuration.GetSection("RedisCache");
+    options.Configuration = redisCacheSection.GetValue<string>("ConnectionString");
     options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
 });
 
@@ -40,7 +73,7 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-// Add services to the container.
+// Add services to the container. for user login
 builder.Services.AddSingleton<DapperContext>();
 builder.Services.AddScoped<IUserRepo, UserRepoImpl>();
 builder.Services.AddScoped<IUserService,UserServiceImpl>();
@@ -64,6 +97,8 @@ builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+//for acquring lock on swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Get USerNotes based on ID", Version = "v1" });

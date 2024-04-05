@@ -29,7 +29,7 @@ namespace BuisinessLayer.service.serviceImpl
             var addedCollaborator = await _collaboratorRepository.AddCollaboratorAsync(collaborator);
 
             // Send invitation email to the collaborator
-            await SendCollaboratorInvitationEmail(collaborator.CollaboratorEmail);
+            /*await SendCollaboratorInvitationEmail(collaborator.CollaboratorEmail);*/
 
             return addedCollaborator;
         }
@@ -50,7 +50,7 @@ namespace BuisinessLayer.service.serviceImpl
             return collaborator;
         }
 
-        private async Task SendCollaboratorInvitationEmail(string email)
+/*        private async Task SendCollaboratorInvitationEmail(string email)
         {
             // Validate email (optional)
 
@@ -64,6 +64,6 @@ namespace BuisinessLayer.service.serviceImpl
                 // Log the exception or handle it as needed
                 throw new Exception("Error sending invitation email to collaborator.", ex);
             }
-        }
+        }*/
     }
 }
