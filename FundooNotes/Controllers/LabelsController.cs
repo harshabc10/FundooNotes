@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using RepositaryLayer.Entity;
+using ModelLayer.Entity;
 using System.Text.Json;
 
 namespace FundooNotes.Controllers
@@ -86,7 +86,7 @@ namespace FundooNotes.Controllers
 
         //redis implementation to these apis
 
-        [HttpPost]
+        [HttpPost("CreateLable")]
         public async Task<IActionResult> CreateLabel(Label label)
         {
             try
@@ -106,7 +106,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpPut("{labelId}")]
+        [HttpPut("RenameByLableId")]
         public async Task<IActionResult> EditLabel(int labelId, Label label)
         {
             try
@@ -138,7 +138,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpDelete("{labelId}")]
+        [HttpDelete("DeleteByLableId")]
         public async Task<IActionResult> DeleteLabel(int labelId)
         {
             try
@@ -169,7 +169,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpGet("notes/{userId}")]
+        [HttpGet("GetUsernotesByUserId")]
         public async Task<IActionResult> GetNotesByUserId(int userId)
         {
             try
@@ -191,7 +191,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("GetLablesByUserId")]
         public async Task<IActionResult> GetUsersLabelsList(int userId)
         {
             var cacheKey = $"Labels_{userId}";
@@ -222,7 +222,7 @@ namespace FundooNotes.Controllers
 
         // with out redis
 
-        [HttpDelete("{userId}/{noteId}")]
+        [HttpDelete("DeleteLableByUserIdAndNotedId")]
         public async Task<IActionResult> RemoveLabel(int userId, int noteId)
         {
             try
@@ -245,22 +245,22 @@ namespace FundooNotes.Controllers
         }
 
 
-/*        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUsersLabelsList(int userId)
-        {
-            try
-            {
-                var labels = await _labelService.GetUsersLabelsList(userId);
-                return Ok(labels);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception or handle it as needed
-                return StatusCode(500, $"Error getting user's labels: {ex.Message}");
-            }
-        }*/
+        /*        [HttpGet("{userId}")]
+                public async Task<IActionResult> GetUsersLabelsList(int userId)
+                {
+                    try
+                    {
+                        var labels = await _labelService.GetUsersLabelsList(userId);
+                        return Ok(labels);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the exception or handle it as needed
+                        return StatusCode(500, $"Error getting user's labels: {ex.Message}");
+                    }
+                }*/
 
-       
+
 
 
     }

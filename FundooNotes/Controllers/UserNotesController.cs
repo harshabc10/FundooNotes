@@ -1,13 +1,13 @@
 ﻿using BuisinessLayer.service.Iservice;
-using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Gmail.v1;
+using Google.Apis.Gmail.v1.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RepositaryLayer.Entity;
-using System;
-using Microsoft.AspNetCore.Authorization;
+using ModelLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
 using RepositaryLayer.Repositary.RepoImpl;
+using System;
 
 namespace FundooNotes.Controllers
 {
@@ -17,12 +17,12 @@ namespace FundooNotes.Controllers
     {
 
         private readonly IUserNoteService _noteService;
-       
+
 
         public UserNotesController(IUserNoteService noteService)
         {
             _noteService = noteService;
-            
+
         }
 
         /*        [HttpPost]
@@ -39,12 +39,12 @@ namespace FundooNotes.Controllers
                         return StatusCode(StatusCodes.Status500InternalServerError, $"Error adding user note: {ex.Message}");
                     }
                 }*/
-        [HttpPost]
-        public async Task<ActionResult<UserNote>> AddUserNoteAsync(UserNote note)
+        [HttpPost("CreateUsernotes")]
+        public async Task<ActionResult<UserNote>> AddUserNote(UserNote note)
         {
             try
             {
-                var addedNote = await _noteService.AddUserNoteAsync(note);
+                var addedNote = await _noteService.AddUserNote(note);
                 return Ok(addedNote); // Return 200 OK with the added note
             }
             catch (Exception ex)
@@ -53,12 +53,12 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<bool>> DeleteUserNoteAsync(int id)
+        [HttpDelete("DeleteUsernotesById")]
+        public async Task<ActionResult<bool>> DeleteUserNote(int id)
         {
             try
             {
-                bool isDeleted = await _noteService.DeleteUserNoteAsync(id);
+                bool isDeleted = await _noteService.DeleteUserNote(id);
                 if (isDeleted)
                 {
                     return Ok(true); // Return 200 OK with true indicating successful deletion
@@ -74,8 +74,8 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpPut]
-        public async Task<ActionResult<UserNote>> UpdateUserNoteAsync(UserNote note)
+        [HttpPut("UpdateUsernotes")]
+        public async Task<ActionResult<UserNote>> UpdateUserNote(UserNote note)
         {
             try
             {
@@ -86,7 +86,7 @@ namespace FundooNotes.Controllers
                 }
 
                 // Call the service method to update the user note
-                var updatedNote = await _noteService.UpdateUserNoteAsync(note);
+                var updatedNote = await _noteService.UpdateUserNote(note);
 
                 if (updatedNote == null)
                 {
@@ -103,14 +103,14 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetUsernotesByUserId")]
         [Authorize]
-        public async Task<ActionResult<UserNote>> GetUserNoteByIdAsync(int id)
+        public async Task<ActionResult<UserNote>> GetUserNoteById(int id)
         {
             try
             {
                 // Call the service method to get the user note by ID
-                var userNote = await _noteService.GetUserNoteByIdAsync(id);
+                var userNote = await _noteService.GetUserNoteById(id);
 
                 if (userNote == null)
                 {
@@ -127,76 +127,6 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpPost("addcollaborator")]
-        public async Task<IActionResult> AddCollaboratorAsync([FromBody] string email)
-        {
-            try
-            {
-                // Call the collaborator service method to send a message to the email
-                bool emailSent = await _noteService.SendCollaboratorMessageAsync(email);
-
-                if (emailSent)
-                {
-                    return Ok("Message sent to collaborator.");
-                }
-                else
-                {
-                    return BadRequest("Failed to send message to collaborator.");
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log the exception or handle it as needed
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred.");
-            }
-        }
-
-        [HttpGet("collaborator/{collaboratorId}")]
-        public async Task<ActionResult<IEnumerable<UserNote>>> GetUserNotesByCollaboratorIdAsync(int collaboratorId)
-        {
-            try
-            {
-                // Call the service method to get user notes by collaborator ID
-                var userNotes = await _noteService.GetUserNotesByCollaboratorIdAsync(collaboratorId);
-
-                if (userNotes == null || !userNotes.Any())
-                {
-                    return NotFound("No user notes found for the collaborator.");
-                }
-
-                // Return the user notes as a response
-                return Ok(userNotes);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception or handle it as needed
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error retrieving user notes by collaborator ID: {ex.Message}");
-            }
-        }
-
-        [HttpDelete("delete/{title}")]
-        public async Task<ActionResult<bool>> DeleteUserNoteByTitleAsync(string title)
-        {
-            try
-            {
-                bool isDeleted = await _noteService.DeleteUserNoteByTitleAsync(title);
-                if (isDeleted)
-                {
-                    return Ok(true); // Return 200 OK with true indicating successful deletion
-                }
-                else
-                {
-                    return NotFound(); // Return 404 Not Found if the user note with the given title was not found
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"Error deleting user note by title: {ex.Message}");
-            }
-
-
-            // Implement other API endpoints as needed
-        }
     }
 
 }

@@ -1,7 +1,7 @@
 ﻿using BuisinessLayer.service.Iservice;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RepositaryLayer.Entity;
+using ModelLayer.Entity;
 
 namespace FundooNotes.Controllers
 {
@@ -17,24 +17,24 @@ namespace FundooNotes.Controllers
             _collaboratorService = collaboratorService ?? throw new ArgumentNullException(nameof(collaboratorService));
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Collaborator>> AddCollaboratorAsync(Collaborator collaborator)
+        [HttpPost("CreateCollaborator")]
+        public async Task<ActionResult<Collaborator>> AddCollaborator(Collaborator collaborator)
         {
-            var addedCollaborator = await _collaboratorService.AddCollaboratorAsync(collaborator);
+            var addedCollaborator = await _collaboratorService.AddCollaborator(collaborator);
             return Ok(addedCollaborator);
         }
 
-        [HttpDelete("{collaboratorId}")]
-        public async Task<ActionResult<bool>> DeleteCollaboratorAsync(int collaboratorId)
+        [HttpDelete("DeleteByCollaboratorId")]
+        public async Task<ActionResult<bool>> DeleteCollaborator(int collaboratorId)
         {
-            var isDeleted = await _collaboratorService.DeleteCollaboratorAsync(collaboratorId);
+            var isDeleted = await _collaboratorService.DeleteCollaborator(collaboratorId);
             return Ok(isDeleted);
         }
 
-        [HttpGet("{collaboratorId}")]
-        public async Task<ActionResult<Collaborator>> GetCollaboratorAsync(int collaboratorId)
+        [HttpGet("GetByCollaboratorId")]
+        public async Task<ActionResult<Collaborator>> GetCollaborator(int collaboratorId)
         {
-            var collaborator = await _collaboratorService.GetCollaboratorAsync(collaboratorId);
+            var collaborator = await _collaboratorService.GetCollaborator(collaboratorId);
             if (collaborator == null)
             {
                 return NotFound();

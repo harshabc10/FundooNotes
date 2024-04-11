@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.Entity
+namespace ModelLayer.Entity
 {
     public class UserEntity
     {

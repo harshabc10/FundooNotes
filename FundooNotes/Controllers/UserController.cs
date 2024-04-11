@@ -1,5 +1,4 @@
 ﻿using BuisinessLayer.CustomException;
-using BuisinessLayer.Entity;
 using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
 using Confluent.Kafka;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using ModelLayer.Entity;
 using RepositaryLayer.DTO.RequestDto;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -59,7 +59,7 @@ namespace FundooNotes.Controllers
             Task.Run(() => ConsumeKafkaMessages(_cancellationTokenSource.Token));
         }
 
-        [HttpPost("createUser")]
+        [HttpPost("First route - POST - json - body")]
         public async Task<IActionResult> createUser(UserRequest request)
         {
             try
@@ -130,33 +130,33 @@ namespace FundooNotes.Controllers
                        return Ok($"User create sucessfull : {await service.createUser(request)}");
                 }*/
 
-        [HttpGet("Login/{Email}/{password}")]
+        [HttpGet("UserLogin")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> Login(string Email, string password)
         {
-           var user =await service.Login(Email, password);
+            var user = await service.Login(Email, password);
 
             //session creting
             _httpContextAccessor.HttpContext.Session.SetString("UserName", user.FirstName);
 
             var token = CreateToken(user);
-            return Ok($"Token Generated sucessfully{new {Token = token}}");
+            return Ok($"Token Generated sucessfully{new { Token = token }}");
 
         }
 
 
-        [HttpPut("forgotpass/{Email}")]
+        [HttpPut("ResetPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
             return Ok($"{await service.ChangePasswordRequest(Email)}");
         }
 
-        [HttpPut("otp/{otp}/{password}")]
+        [HttpPut("EnterOtpAndNewPassword")]
         [UserExceptionHandlerFilter]
-        public async Task<IActionResult> ChangePassword(String otp,String password)
+        public async Task<IActionResult> ChangePassword(String otp, String password)
         {
-            return Ok(await service.ChangePassword(otp,password));
+            return Ok(await service.ChangePassword(otp, password));
         }
 
         //JWt

@@ -1,4 +1,4 @@
-﻿using RepositaryLayer.Entity;
+﻿using ModelLayer.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +9,9 @@ namespace BuisinessLayer.service.Iservice
 {
     public interface ICollaboratorService
     {
-        public Task<Collaborator> AddCollaboratorAsync(Collaborator collaborator);
-        public Task<bool> DeleteCollaboratorAsync(int collaboratorId);
-        public Task<Collaborator> GetCollaboratorAsync(int collaboratorId);
+        public Task<Collaborator> AddCollaborator(Collaborator collaborator);
+        public Task<bool> DeleteCollaborator(int collaboratorId);
+        public Task<Collaborator> GetCollaborator(int collaboratorId);
     }
 
 }

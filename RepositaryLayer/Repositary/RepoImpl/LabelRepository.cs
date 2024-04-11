@@ -1,8 +1,9 @@
-﻿using BuisinessLayer.Entity;
-using Dapper;
+﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using ModelLayer.Entity;
+using ModelLayer.Entity;
 using RepositaryLayer.Context;
-using RepositaryLayer.Entity;
+using RepositaryLayer.Repositary;
 using RepositaryLayer.Repositary.IRepo;
 using System.Collections.Generic;
 using System.Data;
@@ -89,7 +90,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 return (await connection.QueryAsync<UserNote>(query, new { UserId = userId })).ToList();
             }
         }
-        public async Task<bool> DeleteLabelsByUserNoteIdAsync(int userNoteId)
+        public async Task<bool> DeleteLabelsByUserNoteId(int userNoteId)
         {
             using (var connection = _context.CreateConnection())
             {

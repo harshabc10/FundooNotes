@@ -1,19 +1,16 @@
 using BuisinessLayer.service.Iservice;
 using BuisinessLayer.service.serviceImpl;
+using Confluent.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
+using NLog.Web;
 using RepositaryLayer.Context;
 using RepositaryLayer.Repositary.IRepo;
 using RepositaryLayer.Repositary.RepoImpl;
-using System.Net.Mail;
 using System.Text;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Confluent.Kafka;
-using Microsoft.AspNetCore.Hosting;
+
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -56,13 +53,28 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 
 //loggers
-builder.Services.AddLogging(config =>
+/*builder.Host.ConfigureLogging(logging =>
 {
-    config.ClearProviders(); // Clear default providers
-    config.AddConsole();
-    config.AddDebug();
-});// Add console logger
+    logging.ClearProviders(); // Clear default logging providers
 
+    // Configure NLog
+    logging.AddNLog(new NLogProviderOptions
+    {
+        CaptureMessageProperties = true,
+        CaptureMessageTemplates = true
+    });
+
+    // Load NLog configuration from file
+    string configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nlog.config");
+    NLog.LogManager.LoadConfiguration(configFilePath);
+});*/
+
+var logpath = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
+NLog.GlobalDiagnosticsContext.Set("LogDirectory", logpath);
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
+builder.Host.UseNLog();
+builder.Services.AddSingleton<NLog.ILogger>(NLog.LogManager.GetCurrentClassLogger());
 //session
 builder.Services.AddSession(options =>
 {
@@ -75,18 +87,17 @@ builder.Services.AddHttpContextAccessor();
 
 // Add services to the container. for user login
 builder.Services.AddSingleton<DapperContext>();
-builder.Services.AddScoped<IUserRepo, UserRepoImpl>();
-builder.Services.AddScoped<IUserService,UserServiceImpl>();
+//builder.Services.AddScoped<IUserRepo, UserRepoImpl>();
+builder.Services.AddTransient<IUserRepo, UserRepoImpl>();
+builder.Services.AddScoped<IUserService, UserServiceImpl>();
 
 //usernotes
 builder.Services.AddScoped<IUserNoteRepository, UserNoteRepository>();
 builder.Services.AddScoped<IUserNoteService, UserNoteService>();
 
 //collbration
-builder.Services.AddScoped<ICollaboratorService, CollaboratorService>();
 builder.Services.AddScoped<ICollaboratorRepository, CollaboratorRepository>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IEmailServiceRepo, EmailServiceRepo>();
+builder.Services.AddScoped<ICollaboratorService, CollaboratorService>();
 
 //lables
 builder.Services.AddScoped<ILabelRepository, LabelRepository>();
@@ -154,9 +165,9 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
-        
-        
-        
+
+
+
         ClockSkew = TimeSpan.Zero,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = key

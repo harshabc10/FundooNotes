@@ -1,5 +1,5 @@
 ﻿using BuisinessLayer.service.Iservice;
-using RepositaryLayer.Entity;
+using ModelLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
 using System;
 using System.Collections.Generic;
