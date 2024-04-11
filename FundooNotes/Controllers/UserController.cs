@@ -59,7 +59,7 @@ namespace FundooNotes.Controllers
             Task.Run(() => ConsumeKafkaMessages(_cancellationTokenSource.Token));
         }
 
-        [HttpPost("First route - POST - json - body")]
+        [HttpPost]
         public async Task<IActionResult> createUser(UserRequest request)
         {
             try
@@ -130,7 +130,7 @@ namespace FundooNotes.Controllers
                        return Ok($"User create sucessfull : {await service.createUser(request)}");
                 }*/
 
-        [HttpGet("UserLogin")]
+        [HttpGet("Login")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> Login(string Email, string password)
         {
@@ -145,14 +145,14 @@ namespace FundooNotes.Controllers
         }
 
 
-        [HttpPut("ResetPassword")]
+        [HttpPut("ForgotPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
             return Ok($"{await service.ChangePasswordRequest(Email)}");
         }
 
-        [HttpPut("EnterOtpAndNewPassword")]
+        [HttpPut("ResetPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePassword(String otp, String password)
         {

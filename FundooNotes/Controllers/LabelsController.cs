@@ -86,7 +86,7 @@ namespace FundooNotes.Controllers
 
         //redis implementation to these apis
 
-        [HttpPost("CreateLable")]
+        [HttpPost]
         public async Task<IActionResult> CreateLabel(Label label)
         {
             try
@@ -106,7 +106,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpPut("RenameByLableId")]
+        [HttpPut("ById")]
         public async Task<IActionResult> EditLabel(int labelId, Label label)
         {
             try
@@ -138,7 +138,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpDelete("DeleteByLableId")]
+        [HttpDelete("ById")]
         public async Task<IActionResult> DeleteLabel(int labelId)
         {
             try
@@ -169,7 +169,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpGet("GetUsernotesByUserId")]
+        [HttpGet("ByUserId")]
         public async Task<IActionResult> GetNotesByUserId(int userId)
         {
             try
@@ -191,7 +191,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpGet("GetLablesByUserId")]
+        [HttpGet("ByUserId")]
         public async Task<IActionResult> GetUsersLabelsList(int userId)
         {
             var cacheKey = $"Labels_{userId}";
@@ -222,7 +222,7 @@ namespace FundooNotes.Controllers
 
         // with out redis
 
-        [HttpDelete("DeleteLableByUserIdAndNotedId")]
+        [HttpDelete("ByUserIdAndNotedId")]
         public async Task<IActionResult> RemoveLabel(int userId, int noteId)
         {
             try

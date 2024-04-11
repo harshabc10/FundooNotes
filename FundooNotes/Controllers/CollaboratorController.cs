@@ -17,21 +17,21 @@ namespace FundooNotes.Controllers
             _collaboratorService = collaboratorService ?? throw new ArgumentNullException(nameof(collaboratorService));
         }
 
-        [HttpPost("CreateCollaborator")]
+        [HttpPost]
         public async Task<ActionResult<Collaborator>> AddCollaborator(Collaborator collaborator)
         {
             var addedCollaborator = await _collaboratorService.AddCollaborator(collaborator);
             return Ok(addedCollaborator);
         }
 
-        [HttpDelete("DeleteByCollaboratorId")]
+        [HttpDelete("ById")]
         public async Task<ActionResult<bool>> DeleteCollaborator(int collaboratorId)
         {
             var isDeleted = await _collaboratorService.DeleteCollaborator(collaboratorId);
             return Ok(isDeleted);
         }
 
-        [HttpGet("GetByCollaboratorId")]
+        [HttpGet("ById")]
         public async Task<ActionResult<Collaborator>> GetCollaborator(int collaboratorId)
         {
             var collaborator = await _collaboratorService.GetCollaborator(collaboratorId);

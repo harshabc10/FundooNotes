@@ -39,7 +39,7 @@ namespace FundooNotes.Controllers
                         return StatusCode(StatusCodes.Status500InternalServerError, $"Error adding user note: {ex.Message}");
                     }
                 }*/
-        [HttpPost("CreateUsernotes")]
+        [HttpPost]
         public async Task<ActionResult<UserNote>> AddUserNote(UserNote note)
         {
             try
@@ -53,7 +53,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpDelete("DeleteUsernotesById")]
+        [HttpDelete("ById")]
         public async Task<ActionResult<bool>> DeleteUserNote(int id)
         {
             try
@@ -74,7 +74,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpPut("UpdateUsernotes")]
+        [HttpPut]
         public async Task<ActionResult<UserNote>> UpdateUserNote(UserNote note)
         {
             try
@@ -103,7 +103,7 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpGet("GetUsernotesByUserId")]
+        [HttpGet("ByUserId")]
         [Authorize]
         public async Task<ActionResult<UserNote>> GetUserNoteById(int id)
         {
