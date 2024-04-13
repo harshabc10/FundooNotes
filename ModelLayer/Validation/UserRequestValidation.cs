@@ -14,7 +14,7 @@ namespace CommonLayer.Validation
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             UserRequest valid = validationContext.ObjectInstance as UserRequest;
-            if (valid!=null)
+            if (valid != null)
             {
                 if (Regex.IsMatch(valid.FirstName, @"^[a-zA-Z]{1,20}$"))
                 {

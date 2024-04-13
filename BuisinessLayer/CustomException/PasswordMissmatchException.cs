@@ -8,8 +8,9 @@ namespace BuisinessLayer.CustomException
 {
     public class PasswordMissmatchException : Exception
     {
-        public PasswordMissmatchException() { 
-        
+        public PasswordMissmatchException()
+        {
+
         }
         public PasswordMissmatchException(string message) : base(message)
         {

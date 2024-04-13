@@ -1,6 +1,5 @@
-﻿using BuisinessLayer.Entity;
+﻿using ModelLayer.Entity;
 using Dapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RepositaryLayer.Context;
 using RepositaryLayer.Repositary.IRepo;
@@ -10,6 +9,8 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
+using ILogger = NLog.ILogger;
 
 
 namespace RepositaryLayer.Repositary.RepoImpl
@@ -17,11 +18,11 @@ namespace RepositaryLayer.Repositary.RepoImpl
     public class UserRepoImpl : IUserRepo
     {
         private readonly DapperContext context;
-        private readonly ILogger<UserRepoImpl> logger; // Logger instance
+        private readonly ILogger logger; // Logger instance
         public UserRepoImpl(DapperContext contex, ILogger<UserRepoImpl> logger)
         {
             this.context = contex;
-            this.logger = logger;
+            this.logger = LogManager.GetCurrentClassLogger();
         }
 
         public async Task<int> createUser(UserEntity entity)
@@ -35,14 +36,14 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 int rowsAffected = await connection.ExecuteAsync(query, entity);
 
                 // Log information message
-                logger.LogInformation("User created successfully. Rows affected: {0}", rowsAffected);
+                logger.Info("User created successfully. Rows affected: {0}", rowsAffected);
                
                 return rowsAffected;
             }
             catch (Exception ex)
             {
                 // Log the exception
-                logger.LogError(ex, "Error occurred while creating user.");
+                logger.Error(ex, "Error occurred while creating user.");
                 throw; // Rethrow the exception
             }
         }
@@ -71,7 +72,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             IDbConnection connection = context.CreateConnection();
 
             // Log information message
-            logger.LogInformation("Getting user by email: {0}", email);
+            logger.Info("Getting user by email: {0}", email);
 
             return await connection.QueryFirstAsync<UserEntity>(Query, new { Email = email });
         }
@@ -83,7 +84,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             int rowsAffected = await connection.ExecuteAsync(Query, new { mail = mailid, Password = password });
 
             // Log information message
-            logger.LogInformation("Password updated successfully for email: {0}. Rows affected: {1}", mailid, rowsAffected);
+            logger.Info("Password updated successfully for email: {0}. Rows affected: {1}", mailid, rowsAffected);
 
             return rowsAffected;
         }

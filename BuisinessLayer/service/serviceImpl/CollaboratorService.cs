@@ -1,6 +1,7 @@
 ﻿using BuisinessLayer.service.Iservice;
 using Google.Apis.Gmail.v1;
-using RepositaryLayer.Entity;
+using Microsoft.Extensions.Logging;
+using ModelLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
 using System;
 using System.Collections.Generic;
@@ -13,57 +14,58 @@ namespace BuisinessLayer.service.serviceImpl
     public class CollaboratorService : ICollaboratorService
     {
         private readonly ICollaboratorRepository _collaboratorRepository;
-        private readonly IEmailService _emailService; // Assume you have an email service
+        private readonly ILogger <CollaboratorService> _logger;
+        
 
-        public CollaboratorService(ICollaboratorRepository collaboratorRepository, IEmailService emailService)
+        public CollaboratorService(ICollaboratorRepository collaboratorRepository, ILogger<CollaboratorService> logger)
         {
-            _collaboratorRepository = collaboratorRepository;
-            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _collaboratorRepository = collaboratorRepository ?? throw new ArgumentNullException(nameof(collaboratorRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<Collaborator> AddCollaboratorAsync(Collaborator collaborator)
+        public async Task<Collaborator> AddCollaborator(Collaborator collaborator)
         {
             // Validate input (optional)
 
             // Add collaborator to the repository
-            var addedCollaborator = await _collaboratorRepository.AddCollaboratorAsync(collaborator);
+            var addedCollaborator = await _collaboratorRepository.AddCollaborator(collaborator);
 
             // Send invitation email to the collaborator
-            await SendCollaboratorInvitationEmail(collaborator.CollaboratorEmail);
+            /*await SendCollaboratorInvitationEmail(collaborator.CollaboratorEmail);*/
 
             return addedCollaborator;
         }
 
-        public async Task<bool> DeleteCollaboratorAsync(int collaboratorId)
+        public async Task<bool> DeleteCollaborator(int collaboratorId)
         {
             // Delete collaborator from the repository
-            var isDeleted = await _collaboratorRepository.DeleteCollaboratorAsync(collaboratorId);
+            var isDeleted = await _collaboratorRepository.DeleteCollaborator(collaboratorId);
 
             return isDeleted;
         }
 
-        public async Task<Collaborator> GetCollaboratorAsync(int collaboratorId)
+        public async Task<Collaborator> GetCollaborator(int collaboratorId)
         {
             // Get collaborator from the repository
-            var collaborator = await _collaboratorRepository.GetCollaboratorAsync(collaboratorId);
+            var collaborator = await _collaboratorRepository.GetCollaborator(collaboratorId);
 
             return collaborator;
         }
 
-        private async Task SendCollaboratorInvitationEmail(string email)
-        {
-            // Validate email (optional)
+        /*        private async Task SendCollaboratorInvitationEmail(string email)
+                {
+                    // Validate email (optional)
 
-            // Send invitation email to the collaborator using the email service
-            try
-            {
-                await _emailService.SendEmailAsync(email, "Invitation to collaborate", "You have been invited as a collaborator.");
-            }
-            catch (Exception ex)
-            {
-                // Log the exception or handle it as needed
-                throw new Exception("Error sending invitation email to collaborator.", ex);
-            }
-        }
+                    // Send invitation email to the collaborator using the email service
+                    try
+                    {
+                        await _emailService.SendEmailAsync(email, "Invitation to collaborate", "You have been invited as a collaborator.");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the exception or handle it as needed
+                        throw new Exception("Error sending invitation email to collaborator.", ex);
+                    }
+                }*/
     }
 }

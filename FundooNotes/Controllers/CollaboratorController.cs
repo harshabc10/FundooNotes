@@ -1,7 +1,7 @@
-﻿using BuisinessLayer.service.Iservice;
+﻿/*using BuisinessLayer.service.Iservice;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RepositaryLayer.Entity;
+using ModelLayer.Entity;
 
 namespace FundooNotes.Controllers
 {
@@ -18,23 +18,23 @@ namespace FundooNotes.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Collaborator>> AddCollaboratorAsync(Collaborator collaborator)
+        public async Task<ActionResult<Collaborator>> AddCollaborator(Collaborator collaborator)
         {
-            var addedCollaborator = await _collaboratorService.AddCollaboratorAsync(collaborator);
+            var addedCollaborator = await _collaboratorService.AddCollaborator(collaborator);
             return Ok(addedCollaborator);
         }
 
-        [HttpDelete("{collaboratorId}")]
-        public async Task<ActionResult<bool>> DeleteCollaboratorAsync(int collaboratorId)
+        [HttpDelete("ById")]
+        public async Task<ActionResult<bool>> DeleteCollaborator(int collaboratorId)
         {
-            var isDeleted = await _collaboratorService.DeleteCollaboratorAsync(collaboratorId);
+            var isDeleted = await _collaboratorService.DeleteCollaborator(collaboratorId);
             return Ok(isDeleted);
         }
 
-        [HttpGet("{collaboratorId}")]
-        public async Task<ActionResult<Collaborator>> GetCollaboratorAsync(int collaboratorId)
+        [HttpGet("ById")]
+        public async Task<ActionResult<Collaborator>> GetCollaborator(int collaboratorId)
         {
-            var collaborator = await _collaboratorService.GetCollaboratorAsync(collaboratorId);
+            var collaborator = await _collaboratorService.GetCollaborator(collaboratorId);
             if (collaborator == null)
             {
                 return NotFound();
@@ -43,4 +43,55 @@ namespace FundooNotes.Controllers
         }
     }
 
+}
+*/
+
+using BuisinessLayer.service.Iservice;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using ModelLayer.Entity;
+using System;
+using System.Threading.Tasks;
+
+namespace FundooNotes.Controllers
+{
+    [ApiController]
+    [Route("api/collaborators")]
+    public class CollaboratorController : ControllerBase
+    {
+        private readonly ICollaboratorService _collaboratorService;
+
+        public CollaboratorController(ICollaboratorService collaboratorService)
+        {
+            _collaboratorService = collaboratorService ?? throw new ArgumentNullException(nameof(collaboratorService));
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Collaborator>> AddCollaborator(Collaborator collaborator)
+        {
+            // Simulate a CPU-bound operation using Task.Run
+            var addedCollaborator = await Task.Run(() => _collaboratorService.AddCollaborator(collaborator));
+            return Ok(addedCollaborator);
+        }
+
+        [HttpDelete("ById")]
+        public async Task<ActionResult<bool>> DeleteCollaborator(int collaboratorId)
+        {
+            // Simulate a CPU-bound operation using Task.Run
+            var isDeleted = await Task.Run(() => _collaboratorService.DeleteCollaborator(collaboratorId));
+            return Ok(isDeleted);
+        }
+
+        [HttpGet("ById")]
+        public async Task<ActionResult<Collaborator>> GetCollaborator(int collaboratorId)
+        {
+            // Simulate a CPU-bound operation using Task.Run
+            var collaborator = await Task.Run(() => _collaboratorService.GetCollaborator(collaboratorId));
+            if (collaborator == null)
+            {
+                return NotFound();
+            }
+            return Ok(collaborator);
+        }
+    }
 }

@@ -1,35 +1,80 @@
 using BuisinessLayer.service.Iservice;
 using BuisinessLayer.service.serviceImpl;
+using Confluent.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
+using NLog.Web;
 using RepositaryLayer.Context;
 using RepositaryLayer.Repositary.IRepo;
 using RepositaryLayer.Repositary.RepoImpl;
-using System.Net.Mail;
 using System.Text;
-using Swashbuckle.AspNetCore.SwaggerGen;
+
 var builder = WebApplication.CreateBuilder(args);
 
+
+//kafka implementations
+
+// Register the ApacheKafkaConsumerService as a singleton hosted service
+builder.Services.AddSingleton<IProducer<string, string>>(sp =>
+{
+    var producerConfig = new ProducerConfig
+    {
+        BootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
+    };
+    return new ProducerBuilder<string, string>(producerConfig).Build();
+});
+
+builder.Services.AddSingleton<IConsumer<string, string>>(sp =>
+{
+    var consumerConfig = new ConsumerConfig
+    {
+        BootstrapServers = builder.Configuration["Kafka:BootstrapServers"],
+        GroupId = builder.Configuration["Kafka:ConsumerGroupId"],
+        AutoOffsetReset = AutoOffsetReset.Earliest
+    };
+    return new ConsumerBuilder<string, string>(consumerConfig).Build();
+});
+
 //redis concept
-builder.Services.AddStackExchangeRedisCache(options =>
+/*builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = "127.0.0.1:6379"; // Redis server address
+    options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
+   
+});*/
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    IConfigurationSection redisCacheSection = builder.Configuration.GetSection("RedisCache");
+    options.Configuration = redisCacheSection.GetValue<string>("ConnectionString");
     options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
 });
 
 
 //loggers
-builder.Services.AddLogging(config =>
+/*builder.Host.ConfigureLogging(logging =>
 {
-    config.ClearProviders(); // Clear default providers
-    config.AddConsole();
-    config.AddDebug();
-});// Add console logger
+    logging.ClearProviders(); // Clear default logging providers
 
+    // Configure NLog
+    logging.AddNLog(new NLogProviderOptions
+    {
+        CaptureMessageProperties = true,
+        CaptureMessageTemplates = true
+    });
+
+    // Load NLog configuration from file
+    string configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nlog.config");
+    NLog.LogManager.LoadConfiguration(configFilePath);
+});*/
+
+var logpath = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
+NLog.GlobalDiagnosticsContext.Set("LogDirectory", logpath);
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
+builder.Host.UseNLog();
+builder.Services.AddSingleton<NLog.ILogger>(NLog.LogManager.GetCurrentClassLogger());
 //session
 builder.Services.AddSession(options =>
 {
@@ -40,20 +85,19 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-// Add services to the container.
+// Add services to the container. for user login
 builder.Services.AddSingleton<DapperContext>();
-builder.Services.AddScoped<IUserRepo, UserRepoImpl>();
-builder.Services.AddScoped<IUserService,UserServiceImpl>();
+//builder.Services.AddScoped<IUserRepo, UserRepoImpl>();
+builder.Services.AddTransient<IUserRepo, UserRepoImpl>();
+builder.Services.AddScoped<IUserService, UserServiceImpl>();
 
 //usernotes
 builder.Services.AddScoped<IUserNoteRepository, UserNoteRepository>();
 builder.Services.AddScoped<IUserNoteService, UserNoteService>();
 
 //collbration
-builder.Services.AddScoped<ICollaboratorService, CollaboratorService>();
 builder.Services.AddScoped<ICollaboratorRepository, CollaboratorRepository>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IEmailServiceRepo, EmailServiceRepo>();
+builder.Services.AddScoped<ICollaboratorService, CollaboratorService>();
 
 //lables
 builder.Services.AddScoped<ILabelRepository, LabelRepository>();
@@ -64,6 +108,8 @@ builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+//for acquring lock on swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Get USerNotes based on ID", Version = "v1" });
@@ -119,9 +165,9 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
-        
-        
-        
+
+
+
         ClockSkew = TimeSpan.Zero,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = key

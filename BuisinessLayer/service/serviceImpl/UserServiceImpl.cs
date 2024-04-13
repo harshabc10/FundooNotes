@@ -216,11 +216,11 @@ namespace BuisinessLayer.service.serviceImpl
 */
 
 using BuisinessLayer.CustomException;
-using BuisinessLayer.Entity;
 using BuisinessLayer.MailSender;
 using BuisinessLayer.service.Iservice;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using ModelLayer.Entity;
 using RepositaryLayer.DTO.RequestDto;
 using RepositaryLayer.Repositary.IRepo;
 using System;
@@ -370,55 +370,55 @@ namespace BuisinessLayer.service.serviceImpl
             return "Password not changed";
         }
 
-       /* public async Task<UserResponce> Authenticate(string email, string password)
-        {
-            // Check if user exists in the database
-            var user = await UserRepo.GetUserByEmail(email);
+        /* public async Task<UserResponce> Authenticate(string email, string password)
+         {
+             // Check if user exists in the database
+             var user = await UserRepo.GetUserByEmail(email);
 
-            if (user == null || user.UserPassword != password)
-            {
-                // User not found or password incorrect
-                return null;
-            }
+             if (user == null || user.UserPassword != password)
+             {
+                 // User not found or password incorrect
+                 return null;
+             }
 
-            // User authenticated successfully
-            var token = CreateToken(user);
+             // User authenticated successfully
+             var token = CreateToken(user);
 
-            // You can return additional user details or just the token
-            return new UserResponce
-            {
-               
-                FirstName = user.UserFirstName,
-                LastName = user.UserLastName,
-                Email = user.UserEmail,
-                
-            };
-        }
+             // You can return additional user details or just the token
+             return new UserResponce
+             {
 
-        private string CreateToken(UserEntity user)
-        {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, $"{user.UserFirstName} {user.UserLastName}"),
-                new Claim(ClaimTypes.Email, user.UserEmail)
-                // Add more claims as needed
-            };
+                 FirstName = user.UserFirstName,
+                 LastName = user.UserLastName,
+                 Email = user.UserEmail,
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AppSettings:Tokens"]));
+             };
+         }
 
-            var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+         private string CreateToken(UserEntity user)
+         {
+             var claims = new[]
+             {
+                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                 new Claim(ClaimTypes.Name, $"{user.UserFirstName} {user.UserLastName}"),
+                 new Claim(ClaimTypes.Email, user.UserEmail)
+                 // Add more claims as needed
+             };
 
-            var expires = DateTime.UtcNow.AddHours(1);
+             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AppSettings:Tokens"]));
 
-            var token = new JwtSecurityToken(
-                 claims: claims,
-                expires: expires,
-                signingCredentials: cred
+             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                );
+             var expires = DateTime.UtcNow.AddHours(1);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }*/
+             var token = new JwtSecurityToken(
+                  claims: claims,
+                 expires: expires,
+                 signingCredentials: cred
+
+                 );
+
+             return new JwtSecurityTokenHandler().WriteToken(token);
+         }*/
     }
 }

@@ -20,7 +20,7 @@ namespace BuisinessLayer.MailSender
             System.Net.Mail.MailMessage mailMessage = new System.Net.Mail.MailMessage();
             try
             {
-                mailMessage.From = new System.Net.Mail.MailAddress("m_raghu@outlook.com", "FUNDOO NOTES");
+                mailMessage.From = new System.Net.Mail.MailAddress("harshabc10@outlook.com", "FUNDOO NOTES");
                 mailMessage.To.Add(ToMail);
                 mailMessage.Subject = "Change password for Fundoo Notes";
                 mailMessage.Body = "This is your otp please enter to change password " + otp;
@@ -36,8 +36,8 @@ namespace BuisinessLayer.MailSender
                 // Enable SSL/TLS
                 smtpClient.EnableSsl = true;
 
-                string loginName = "m_raghu@outlook.com";
-                string loginPassword = "R@ghu2k01";
+                string loginName = "harshabc10@outlook.com";
+                string loginPassword = "30thedoctor";
 
                 System.Net.NetworkCredential networkCredential = new System.Net.NetworkCredential(loginName, loginPassword);
                 smtpClient.UseDefaultCredentials = false;

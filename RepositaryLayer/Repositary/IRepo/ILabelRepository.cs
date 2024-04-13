@@ -1,4 +1,4 @@
-﻿using RepositaryLayer.Entity;
+﻿using ModelLayer.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +16,6 @@ namespace RepositaryLayer.Repositary.IRepo
         public Task<List<Label>> GetUsersLabelsList(int userId);
         public Task<List<UserNote>> GetNotesByUserId(int userId);
 
-        public Task<bool> DeleteLabelsByUserNoteIdAsync(int userNoteId);
+        public Task<bool> DeleteLabelsByUserNoteId(int userNoteId);
     }
 }

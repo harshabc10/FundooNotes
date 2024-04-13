@@ -1,7 +1,7 @@
-﻿using BuisinessLayer.Entity;
-using Dapper;
+﻿using Dapper;
+using ModelLayer.Entity;
 using RepositaryLayer.Context;
-using RepositaryLayer.Entity;
+using RepositaryLayer.Repositary;
 using RepositaryLayer.Repositary.IRepo;
 using System;
 using System.Collections;
@@ -24,7 +24,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<UserNote> AddUserNoteAsync(UserNote note)
+        public async Task<UserNote> AddUserNote(UserNote note)
         {
             try
             {
@@ -64,7 +64,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
         }
 
 
-        public async Task<bool> DeleteUserNoteAsync(int id)
+        public async Task<bool> DeleteUserNote(int id)
         {
             try
             {
@@ -90,7 +90,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
 
 
 
-        public async Task<UserNote> UpdateUserNoteAsync(UserNote note)
+        public async Task<UserNote> UpdateUserNote(UserNote note)
         {
             try
             {
@@ -133,7 +133,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             }
         }
 
-        public async Task<UserNote> GetUserNoteByIdAsync(int id)
+        public async Task<UserNote> GetUserNoteById(int id)
         {
             // SQL query to select a user note by ID from the UserNotes table
             string sql = "SELECT * FROM UserNotes WHERE Id = @Id;";
@@ -146,7 +146,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             }
         }
 
-        public async Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorIdAsync(int collaboratorId)
+        public async Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorId(int collaboratorId)
         {
             string query = "SELECT UN.Id, UN.Title, UN.Description, UN.Color, UN.ImagePaths, UN.Reminder, UN.IsArchive," +
                 " UN.IsPinned, UN.IsTrash\r\nFROM UserNotes UN\r\nJOIN Collaborators C ON UN.Id = C.UserNoteId\r\nWHERE C.CollaboratorId = @CollaboratorId;";
@@ -155,7 +155,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             return userNotes.ToList();
         }
 
-        public async Task<bool> DeleteUserNoteByTitleAsync(string title)
+        public async Task<bool> DeleteUserNoteByTitle(string title)
         {
             string sql = "DELETE FROM UserNotes WHERE Title = @Title";
 
@@ -165,7 +165,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             return rowsAffected > 0;
         }
 
-        public async Task<int> GetUserNoteIdByTitleAsync(string title)
+        public async Task<int> GetUserNoteIdByTitle(string title)
         {
             // Query to get the UserNoteId by title
             string query = "SELECT Id FROM UserNotes WHERE Title = @Title";

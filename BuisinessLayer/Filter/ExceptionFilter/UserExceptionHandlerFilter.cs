@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BuisinessLayer.CustomException;
+﻿using BuisinessLayer.CustomException;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace BuisinessLayer.Filter.ExceptionFilter
 {
@@ -15,7 +15,7 @@ namespace BuisinessLayer.Filter.ExceptionFilter
     {
         public override void OnException(ExceptionContext context)
         {
-          //  base.OnException(context);
+            //  base.OnException(context);
             if (context.Exception is SqlException)
             {
                 context.ModelState.AddModelError("EMAIL ID", context.Exception.Message);
@@ -23,12 +23,12 @@ namespace BuisinessLayer.Filter.ExceptionFilter
                 problemdetail.Status = StatusCodes.Status409Conflict;
                 context.Result = new ConflictObjectResult(problemdetail);
             }
-           else if (context.Exception is PasswordMissmatchException)
+            else if (context.Exception is PasswordMissmatchException)
             {
                 context.ModelState.AddModelError("Password", context.Exception.Message);
-                ValidationProblemDetails problemDetails=new ValidationProblemDetails(context.ModelState);
+                ValidationProblemDetails problemDetails = new ValidationProblemDetails(context.ModelState);
                 problemDetails.Status = StatusCodes.Status401Unauthorized;
-                context.Result=new UnauthorizedObjectResult(problemDetails);
+                context.Result = new UnauthorizedObjectResult(problemDetails);
             }
             else if (context.Exception is UserNotFoundException)
             {
@@ -42,7 +42,7 @@ namespace BuisinessLayer.Filter.ExceptionFilter
 
             else
             {
-                context.ModelState.AddModelError("unknow exceptio contact developer", context.Exception.Message+"--> "+context.Exception.StackTrace);
+                context.ModelState.AddModelError("unknow exceptio contact developer", context.Exception.Message + "--> " + context.Exception.StackTrace);
                 ValidationProblemDetails problemDetails = new ValidationProblemDetails(context.ModelState);
                 problemDetails.Status = StatusCodes.Status404NotFound;
                 context.Result = new UnauthorizedObjectResult(problemDetails);

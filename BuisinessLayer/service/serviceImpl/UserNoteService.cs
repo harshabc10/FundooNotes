@@ -1,6 +1,6 @@
 ﻿using BuisinessLayer.service.Iservice;
 using Google.Apis.Gmail.v1;
-using RepositaryLayer.Entity;
+using ModelLayer.Entity;
 using RepositaryLayer.Repositary.IRepo;
 using RepositaryLayer.Repositary.RepoImpl;
 using System;
@@ -22,7 +22,7 @@ namespace BuisinessLayer.service.serviceImpl
             _labelRepository = labelRepository;
         }
 
-        public async Task<UserNote> AddUserNoteAsync(UserNote note)
+        public async Task<UserNote> AddUserNote(UserNote note)
         {
             // Validate input
             if (note == null)
@@ -39,7 +39,7 @@ namespace BuisinessLayer.service.serviceImpl
             try
             {
                 // Call repository method to add user note to the database
-                var addedNote = await _noteRepository.AddUserNoteAsync(userNoteToAdd);
+                var addedNote = await _noteRepository.AddUserNote(userNoteToAdd);
                 return addedNote;
             }
             catch (Exception ex)
@@ -50,30 +50,30 @@ namespace BuisinessLayer.service.serviceImpl
         }
 
 
-            public async Task<bool> DeleteUserNoteAsync(int id)
+        public async Task<bool> DeleteUserNote(int id)
+        {
+            try
             {
-                try
+                // Check if the user note with the specified ID exists
+                var existingNote = await _noteRepository.GetUserNoteById(id);
+                if (existingNote == null)
                 {
-                    // Check if the user note with the specified ID exists
-                    var existingNote = await _noteRepository.GetUserNoteByIdAsync(id);
-                    if (existingNote == null)
-                    {
-                        // User note with the specified ID not found, return false
-                        return false;
-                    }
+                    // User note with the specified ID not found, return false
+                    return false;
+                }
 
-                    // Call the repository method to delete the user note
-                    bool isDeleted = await _noteRepository.DeleteUserNoteAsync(id);
-                    return isDeleted;
-                }
-                catch (Exception ex)
-                {
-                    // Log the exception or handle it as needed
-                    throw new Exception("Error deleting user note.", ex);
-                }
+                // Call the repository method to delete the user note
+                bool isDeleted = await _noteRepository.DeleteUserNote(id);
+                return isDeleted;
             }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                throw new Exception("Error deleting user note.", ex);
+            }
+        }
 
-        public async Task<UserNote> UpdateUserNoteAsync(UserNote note)
+        public async Task<UserNote> UpdateUserNote(UserNote note)
         {
             // Validate input
             if (note == null || note.Id <= 0)
@@ -82,7 +82,7 @@ namespace BuisinessLayer.service.serviceImpl
             }
 
             // Check if the user note with the specified ID exists
-            var existingNote = await _noteRepository.GetUserNoteByIdAsync(note.Id);
+            var existingNote = await _noteRepository.GetUserNoteById(note.Id);
             if (existingNote == null)
             {
                 throw new KeyNotFoundException("User note not found.");
@@ -100,24 +100,24 @@ namespace BuisinessLayer.service.serviceImpl
             //existingNote.CollaboratorIds = note.CollaboratorIds;
 
             // Call the repository method to update the user note in the database
-            var updatedNote = await _noteRepository.UpdateUserNoteAsync(existingNote);
+            var updatedNote = await _noteRepository.UpdateUserNote(existingNote);
 
             return updatedNote;
         }
 
-        public async Task<UserNote> GetUserNoteByIdAsync(int id)
+        public async Task<UserNote> GetUserNoteById(int id)
         {
             // Call the repository method to get the user note by ID
-            var userNote = await _noteRepository.GetUserNoteByIdAsync(id);
+            var userNote = await _noteRepository.GetUserNoteById(id);
 
             // Return the retrieved user note
             return userNote;
         }
 
-        public async Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorIdAsync(int collaboratorId)
+        public async Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorId(int collaboratorId)
         {
             // Call the repository method to get user notes by collaborator ID
-            return await _noteRepository.GetUserNotesByCollaboratorIdAsync(collaboratorId);
+            return await _noteRepository.GetUserNotesByCollaboratorId(collaboratorId);
         }
 
 
@@ -149,15 +149,15 @@ namespace BuisinessLayer.service.serviceImpl
             return !string.IsNullOrEmpty(email);
         }
 
-        public Task<bool> SendCollaboratorMessageAsync(string email)
+        public Task<bool> SendCollaboratorMessage(string email)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<bool> DeleteUserNoteByTitleAsync(string title)
+        public async Task<bool> DeleteUserNoteByTitle(string title)
         {
             // Get the UserNoteId by title
-            int userNoteId = await _noteRepository.GetUserNoteIdByTitleAsync(title);
+            int userNoteId = await _noteRepository.GetUserNoteIdByTitle(title);
             if (userNoteId == 0)
             {
                 // User note not found
@@ -165,10 +165,10 @@ namespace BuisinessLayer.service.serviceImpl
             }
 
             // Delete labels associated with the user note
-            await _labelRepository.DeleteLabelsByUserNoteIdAsync(userNoteId);
+            await _labelRepository.DeleteLabelsByUserNoteId(userNoteId);
 
             // Delete the user note
-            return await _noteRepository.DeleteUserNoteAsync(userNoteId);
+            return await _noteRepository.DeleteUserNote(userNoteId);
         }
 
         // Implement other business logic methods as needed
