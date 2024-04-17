@@ -1,5 +1,6 @@
 create database FundooApi
 use FundooApi
+
 CREATE TABLE Users (
     UserId INT PRIMARY KEY IDENTITY(1,1),
     UserFirstName NVARCHAR(50),
@@ -7,6 +8,32 @@ CREATE TABLE Users (
     UserEmail NVARCHAR(100),
     UserPassword NVARCHAR(100)
 );
+
+
+DELETE FROM Users
+WHERE UserId = 6;
+
+SELECT UserEmail, COUNT(*)
+FROM Users
+GROUP BY UserEmail
+HAVING COUNT(*) > 1;
+
+WITH CTE AS (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY UserEmail ORDER BY UserId) AS RowNum
+    FROM Users
+)
+DELETE FROM CTE
+WHERE RowNum > 1;
+
+
+-- Add UNIQUE constraint to UserEmail column
+ALTER TABLE Users
+ADD CONSTRAINT UQ_UserEmail UNIQUE (UserEmail);
+
+-- Add NOT NULL constraint to UserEmail and UserPassword columns
+ALTER TABLE Users
+ALTER COLUMN UserEmail NVARCHAR(100) NOT NULL;
 
 select * from Users
 
@@ -22,7 +49,16 @@ CREATE TABLE UserNotes (
     IsTrash BIT
 );
 
+ALTER TABLE UserNotes
+ADD UserId INT;
+
+-- Add foreign key constraint
+ALTER TABLE UserNotes
+ADD CONSTRAINT FK_UserNotes_UserId FOREIGN KEY (UserId)
+REFERENCES Users(UserId);
+
 select * from UserNotes
+SELECT * FROM UserNotes WHERE UserId = 4;
 
 CREATE TABLE Collaborators (
     CollaboratorId INT PRIMARY KEY IDENTITY,
@@ -36,6 +72,9 @@ CREATE TABLE Collaborators (
 );
 
 SELECT * FROM Collaborators
+
+DELETE FROM Collaborators
+WHERE UserId = 6;
 
 SELECT UN.Id, UN.Title, UN.Description, UN.Color, UN.ImagePaths, UN.Reminder, UN.IsArchive, UN.IsPinned, UN.IsTrash
 FROM UserNotes UN
@@ -52,9 +91,12 @@ CREATE TABLE Labels (
     CONSTRAINT FK_Labels_NoteId FOREIGN KEY (NoteId) REFERENCES UserNotes(Id)
 );
 
+DELETE FROM Labels
+WHERE UserId = 7;
+
 select * from Labels
 
 SELECT UN.Id AS NoteId, UN.Title, UN.Description, UN.Color, UN.ImagePaths, UN.Reminder, UN.IsArchive, UN.IsPinned, UN.IsTrash
 FROM UserNotes UN
 JOIN Labels L ON UN.Id = L.NoteId
-WHERE L.UserId = 4;
+WHERE L.UserId = 1;
