@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
 using RepositaryLayer.Context;
 using RepositaryLayer.Repositary;
 using RepositaryLayer.Repositary.IRepo;
@@ -24,21 +25,22 @@ namespace RepositaryLayer.Repositary.RepoImpl
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<UserNote> AddUserNote(UserNote note)
+        public async Task<UserNoteRequest> AddUserNote(UserNoteRequest note)
         {
             try
             {
                 // SQL query to insert a new user note into the UserNotes table
                 string sql = @"
-            INSERT INTO UserNotes (Title, Description, Color, ImagePaths, Reminder, IsArchive, IsPinned, IsTrash)
-            VALUES (@Title, @Description, @Color, @ImagePaths, @Reminder, @IsArchive, @IsPinned, @IsTrash);
-            SELECT SCOPE_IDENTITY();"; // Retrieve the ID of the newly inserted record
+    INSERT INTO UserNotes (UserId, Title, Description, Color, ImagePaths, Reminder, IsArchive, IsPinned, IsTrash)
+    VALUES (@UserId, @Title, @Description, @Color, @ImagePaths, @Reminder, @IsArchive, @IsPinned, @IsTrash);
+    SELECT SCOPE_IDENTITY();"; // Retrieve the ID of the newly inserted record
 
                 // Execute the SQL query using Dapper and retrieve the ID of the inserted record
                 using (var connection = _context.CreateConnection())
                 {
                     int id = await connection.ExecuteScalarAsync<int>(sql, new
                     {
+                        note.UserId,
                         note.Title,
                         note.Description,
                         note.Color,
@@ -50,7 +52,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                     });
 
                     // Set the ID of the user note object
-                    note.Id = id;
+                    note.UserId = id;
 
                     // Return the modified user note object
                     return note;
@@ -62,6 +64,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 throw new Exception("Error adding user note to the database.", ex);
             }
         }
+
 
 
         public async Task<bool> DeleteUserNote(int id)
@@ -173,6 +176,15 @@ namespace RepositaryLayer.Repositary.RepoImpl
             return await connection.ExecuteScalarAsync<int>(query, new { Title = title });
         }
 
+        public async Task<List<UserNote>> GetUserNotesByUserId(int userId)
+        {
+            using (var connection = _context.CreateConnection())
+            {
+                string query = "SELECT * FROM UserNotes WHERE UserId = @UserId";
+                var userNotes = await connection.QueryAsync<UserNote>(query, new { UserId = userId });
+                return userNotes.ToList();
+            }
+        }
         // Implement other CRUD methods as needed
     }
 }

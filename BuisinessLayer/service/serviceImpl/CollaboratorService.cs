@@ -2,6 +2,7 @@
 using Google.Apis.Gmail.v1;
 using Microsoft.Extensions.Logging;
 using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
 using RepositaryLayer.Repositary.IRepo;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace BuisinessLayer.service.serviceImpl
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<Collaborator> AddCollaborator(Collaborator collaborator)
+        public async Task<CollaboratorRequest> AddCollaborator(CollaboratorRequest collaborator)
         {
             // Validate input (optional)
 

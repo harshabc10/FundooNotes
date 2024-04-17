@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
 using NLog;
 using RepositaryLayer.Context;
 using RepositaryLayer.Repositary;
@@ -22,14 +23,14 @@ namespace RepositaryLayer.Repositary.RepoImpl
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<Collaborator> AddCollaborator(Collaborator collaborator)
+        public async Task<CollaboratorRequest> AddCollaborator(CollaboratorRequest collaborator)
         {
             try
             {
                 string sql = @"
-                    INSERT INTO Collaborators (UserId, UserNoteId, CollaboratorEmail)
-                    VALUES (@UserId, @UserNoteId, @CollaboratorEmail);
-                    SELECT SCOPE_IDENTITY();";
+            INSERT INTO Collaborators (UserId, UserNoteId, CollaboratorEmail)
+            VALUES (@UserId, @UserNoteId, @CollaboratorEmail);
+            SELECT SCOPE_IDENTITY();";
 
                 using (var connection = _context.CreateConnection())
                 {
@@ -40,11 +41,13 @@ namespace RepositaryLayer.Repositary.RepoImpl
                         collaborator.CollaboratorEmail
                     });
 
-                    collaborator.CollaboratorId = id;
+                    // No need to set collaborator.CollaboratorId here
 
                     // Send email to collaborator
                     await SendEmail(collaborator.CollaboratorEmail, "You have been added as a collaborator", "You have been added as a collaborator to a note.");
                     _logger.Info("Collaborator added successfully.");
+
+                    // Since CollaboratorId is an identity column, you can return collaborator as-is
                     return collaborator;
                 }
             }
@@ -54,6 +57,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 throw new Exception("Error adding collaborator to the database.", ex);
             }
         }
+
 
         private async Task SendEmail(string toEmail, string subject, string body)
         {

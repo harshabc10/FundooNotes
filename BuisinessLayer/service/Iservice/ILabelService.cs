@@ -1,4 +1,6 @@
-﻿using ModelLayer.Entity;
+﻿using Microsoft.AspNetCore.Mvc;
+using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +11,8 @@ namespace BuisinessLayer.service.Iservice
 {
     public interface ILabelService
     {
-        public Task<int> CreateLabel(Label label);
-        public Task<int> EditLabel(Label label);
+        public Task<ActionResult<LabelsRequest>> CreateLabel(LabelsRequest label);
+        public Task<Label> EditLabel(Label label);
         public Task<int> DeleteLabel(int labelId);
         public Task<int> RemoveLabel(int userId, int noteId);
         public Task<List<Label>> GetUsersLabelsList(int userId);

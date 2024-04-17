@@ -1,4 +1,5 @@
 ﻿using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace BuisinessLayer.service.Iservice
 {
     public interface ICollaboratorService
     {
-        public Task<Collaborator> AddCollaborator(Collaborator collaborator);
+        public Task<CollaboratorRequest> AddCollaborator(CollaboratorRequest collaborator);
         public Task<bool> DeleteCollaborator(int collaboratorId);
         public Task<Collaborator> GetCollaborator(int collaboratorId);
     }

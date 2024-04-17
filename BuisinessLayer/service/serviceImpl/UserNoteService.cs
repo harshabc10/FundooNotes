@@ -1,6 +1,7 @@
 ﻿using BuisinessLayer.service.Iservice;
 using Google.Apis.Gmail.v1;
 using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
 using RepositaryLayer.Repositary.IRepo;
 using RepositaryLayer.Repositary.RepoImpl;
 using System;
@@ -22,7 +23,7 @@ namespace BuisinessLayer.service.serviceImpl
             _labelRepository = labelRepository;
         }
 
-        public async Task<UserNote> AddUserNote(UserNote note)
+        public async Task<UserNoteRequest> AddUserNote(UserNoteRequest note)
         {
             // Validate input
             if (note == null)
@@ -175,7 +176,10 @@ namespace BuisinessLayer.service.serviceImpl
 
 
 
-
+        public async Task<List<UserNote>> GetUserNotesByUserId(int userId)
+        {
+            return await _noteRepository.GetUserNotesByUserId(userId);
+        }
 
     }
 }

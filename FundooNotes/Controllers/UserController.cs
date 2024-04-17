@@ -2,11 +2,15 @@
 using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
 using Confluent.Kafka;
+using Google.Apis.Gmail.v1.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
+using ModelLayer.Models.ResponceDto;
+using Newtonsoft.Json;
 using RepositaryLayer.DTO.RequestDto;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -64,24 +68,37 @@ namespace FundooNotes.Controllers
         {
             try
             {
-                var result = await service.createUser(request);
+                var userId = await service.createUser(request); // Assuming service.createUser returns an int
+
+                var userResponse = new ResponseModel<UserResponce>
+                {
+                    Message = "User created successfully.",
+                    Data = new UserResponce // Assuming 'UserResponse' is the response model for user creation
+                    {
+                        Id = userId,
+                        FirstName = request.FirstName,
+                        LastName = request.LastName,
+                        Email = request.Email
+                    }
+                };
 
                 // Produce Kafka message
-                var message = $"User created: {result}";
                 var kafkaMessage = new Message<string, string>
                 {
                     Key = "user_created",
-                    Value = message
+                    Value = JsonConvert.SerializeObject(userResponse) // Convert message to JSON string
                 };
+
                 await _kafkaProducer.ProduceAsync(_configuration["Kafka:Topic"], kafkaMessage);
 
-                return Ok(message);
+                return Ok(userResponse);
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
             }
         }
+
 
         private async Task ConsumeKafkaMessages(CancellationToken cancellationToken)
         {
@@ -130,29 +147,50 @@ namespace FundooNotes.Controllers
                        return Ok($"User create sucessfull : {await service.createUser(request)}");
                 }*/
 
-        [HttpGet("Login")]
+        [HttpPost("Login")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> Login(string Email, string password)
         {
-            var user = await service.Login(Email, password);
+            try
+            {
+                var user = await service.Login(Email, password);
 
-            //session creting
-            _httpContextAccessor.HttpContext.Session.SetString("UserName", user.FirstName);
+                // Check if user is found
+                if (user == null)
+                {
+                    return NotFound("User not found."); // You can customize this message as needed
+                }
 
-            var token = CreateToken(user);
-            return Ok($"Token Generated sucessfully{new { Token = token }}");
+                // Create a session for the user
+                _httpContextAccessor.HttpContext.Session.SetString("UserName", user.FirstName);
 
+                // Generate JWT token
+                var token = CreateToken(user);
+
+                // Return token along with success message
+                var response = new
+                {
+                    Token = token,
+                    Message = "Token generated successfully."
+                };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+            }
         }
 
 
-        [HttpPut("ForgotPassword")]
+    [HttpPut("ForgotPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
             return Ok($"{await service.ChangePasswordRequest(Email)}");
         }
 
-        [HttpPut("ResetPassword")]
+        [HttpPost("ResetPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePassword(String otp, String password)
         {
@@ -187,7 +225,8 @@ namespace FundooNotes.Controllers
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, $"{user.FirstName}{user.LastName}")
+                new Claim(ClaimTypes.NameIdentifier, $"{user.Id}"),
+                new Claim(ClaimTypes.Email, $"{user.Email}")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));

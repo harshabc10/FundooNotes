@@ -9,6 +9,7 @@ using NLog.Web;
 using RepositaryLayer.Context;
 using RepositaryLayer.Repositary.IRepo;
 using RepositaryLayer.Repositary.RepoImpl;
+using StackExchange.Redis;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,11 +45,11 @@ builder.Services.AddSingleton<IConsumer<string, string>>(sp =>
     options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
    
 });*/
-builder.Services.AddStackExchangeRedisCache(options =>
+builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
 {
-    IConfigurationSection redisCacheSection = builder.Configuration.GetSection("RedisCache");
-    options.Configuration = redisCacheSection.GetValue<string>("ConnectionString");
-    options.InstanceName = "FundooNotesCache"; // Instance name for cache keys
+    var configuration = provider.GetRequiredService<IConfiguration>(); // Retrieve the IConfiguration object
+    var redisConnectionString = configuration.GetConnectionString("Redis");
+    return ConnectionMultiplexer.Connect(redisConnectionString);
 });
 
 
@@ -112,7 +113,7 @@ builder.Services.AddEndpointsApiExplorer();
 //for acquring lock on swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Get USerNotes based on ID", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Welcome To FundooNotes Environment", Version = "v1" });
 
     // Define the JWT bearer scheme
     var securityScheme = new OpenApiSecurityScheme

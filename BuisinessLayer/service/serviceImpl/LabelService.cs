@@ -1,5 +1,7 @@
 ﻿using BuisinessLayer.service.Iservice;
+using Microsoft.AspNetCore.Mvc;
 using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
 using RepositaryLayer.Repositary.IRepo;
 using System;
 using System.Collections.Generic;
@@ -16,16 +18,18 @@ namespace BuisinessLayer.service.serviceImpl
             _labelRepository = labelRepository;
         }
 
-        public Task<int> CreateLabel(Label label)
+        public async Task<ActionResult<LabelsRequest>> CreateLabel(LabelsRequest label)
         {
             // Implement the logic to create a new label in the repository
-            return _labelRepository.CreateLabel(label);
+            var createdLabel= await _labelRepository.CreateLabel(label);
+            return createdLabel;
         }
 
-        public Task<int> EditLabel(Label label)
+        public async Task<Label> EditLabel(Label label)
         {
-            // Implement the logic to edit an existing label in the repository
-            return _labelRepository.EditLabel(label);
+            // Assuming _labelRepository.EditLabel returns the updated label
+            var updatedLabel = await _labelRepository.EditLabel(label);
+            return updatedLabel;
         }
 
         public Task<int> DeleteLabel(int labelId)
