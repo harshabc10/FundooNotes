@@ -17,6 +17,8 @@ namespace ModelLayer.Entity
         public bool IsArchive { get; set; }
         public bool IsPinned { get; set; }
         public bool IsTrash { get; set; }
+
+        public int UserId { get; set; }
         //public List<int> CollaboratorIds { get; set; }
     }
 

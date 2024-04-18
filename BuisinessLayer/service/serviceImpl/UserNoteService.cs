@@ -23,7 +23,7 @@ namespace BuisinessLayer.service.serviceImpl
             _labelRepository = labelRepository;
         }
 
-        public async Task<UserNoteRequest> AddUserNote(UserNoteRequest note)
+        public async Task<UserNoteRequest> AddUserNote(string userId,UserNoteRequest note)
         {
             // Validate input
             if (note == null)
@@ -40,7 +40,7 @@ namespace BuisinessLayer.service.serviceImpl
             try
             {
                 // Call repository method to add user note to the database
-                var addedNote = await _noteRepository.AddUserNote(userNoteToAdd);
+                var addedNote = await _noteRepository.AddUserNote(userId,userNoteToAdd);
                 return addedNote;
             }
             catch (Exception ex)
@@ -51,7 +51,7 @@ namespace BuisinessLayer.service.serviceImpl
         }
 
 
-        public async Task<bool> DeleteUserNote(int id)
+        public async Task<bool> DeleteUserNote(string userId,int id)
         {
             try
             {
@@ -64,7 +64,7 @@ namespace BuisinessLayer.service.serviceImpl
                 }
 
                 // Call the repository method to delete the user note
-                bool isDeleted = await _noteRepository.DeleteUserNote(id);
+                bool isDeleted = await _noteRepository.DeleteUserNote(userId,id);
                 return isDeleted;
             }
             catch (Exception ex)
@@ -74,37 +74,63 @@ namespace BuisinessLayer.service.serviceImpl
             }
         }
 
-        public async Task<UserNote> UpdateUserNote(UserNote note)
-        {
-            // Validate input
-            if (note == null || note.Id <= 0)
-            {
-                throw new ArgumentException("Invalid user note data.");
-            }
+        /*        public async Task<UserNote> UpdateUserNote(string userId, int noteId, UserNoteRequest noteRequest)
+                {
+                    // Validate input
+                    if (note == null || note.Id <= 0)
+                    {
+                        throw new ArgumentException("Invalid user note data.");
+                    }
 
-            // Check if the user note with the specified ID exists
-            var existingNote = await _noteRepository.GetUserNoteById(note.Id);
+                    // Check if the user note with the specified ID exists and belongs to the user
+                    var existingNote = await _noteRepository.UpdateUserNote(userId, note);
+                    if (existingNote == null)
+                    {
+                        throw new KeyNotFoundException("User note not found or unauthorized to update.");
+                    }
+
+                    // Update the properties of the existing note based on the provided note object
+                    existingNote.Title = note.Title;
+                    existingNote.Description = note.Description;
+                    existingNote.Color = note.Color;
+                    existingNote.ImagePaths = note.ImagePaths;
+                    existingNote.Reminder = note.Reminder;
+                    existingNote.IsArchive = note.IsArchive;
+                    existingNote.IsPinned = note.IsPinned;
+                    existingNote.IsTrash = note.IsTrash;
+
+                    // Call the repository method to update the user note in the database
+                    var updatedNote = await _noteRepository.UpdateUserNote(existingNote);
+
+                    return updatedNote;
+                }*/
+
+        public async Task<UserNote> UpdateUserNote(string userId, int noteId, UserNoteRequest noteRequest)
+        {
+            // Fetch the user note from the repository using Dapper
+            var existingNote = await _noteRepository.GetUserNoteById(noteId);
+
             if (existingNote == null)
             {
-                throw new KeyNotFoundException("User note not found.");
+                throw new InvalidOperationException("User note not found.");
             }
 
-            // Update the properties of the existing note based on the provided note object
-            existingNote.Title = note.Title;
-            existingNote.Description = note.Description;
-            existingNote.Color = note.Color;
-            existingNote.ImagePaths = note.ImagePaths;
-            existingNote.Reminder = note.Reminder;
-            existingNote.IsArchive = note.IsArchive;
-            existingNote.IsPinned = note.IsPinned;
-            existingNote.IsTrash = note.IsTrash;
-            //existingNote.CollaboratorIds = note.CollaboratorIds;
+            // Map properties from noteRequest to existingNote
+            existingNote.Title = noteRequest.Title;
+            existingNote.Description = noteRequest.Description;
+            existingNote.Color = noteRequest.Color;
+            existingNote.ImagePaths = noteRequest.ImagePaths;
+            existingNote.Reminder = noteRequest.Reminder;
+            existingNote.IsArchive = noteRequest.IsArchive;
+            existingNote.IsPinned = noteRequest.IsPinned;
+            existingNote.IsTrash = noteRequest.IsTrash;
 
-            // Call the repository method to update the user note in the database
-            var updatedNote = await _noteRepository.UpdateUserNote(existingNote);
+            // Call the repository method to update the user note using Dapper
+            var updatedNote = await _noteRepository.UpdateUserNote(userId, noteId, noteRequest);
 
             return updatedNote;
         }
+
 
         public async Task<UserNote> GetUserNoteById(int id)
         {
@@ -155,7 +181,7 @@ namespace BuisinessLayer.service.serviceImpl
             throw new NotImplementedException();
         }
 
-        public async Task<bool> DeleteUserNoteByTitle(string title)
+/*        public async Task<bool> DeleteUserNoteByTitle(string title)
         {
             // Get the UserNoteId by title
             int userNoteId = await _noteRepository.GetUserNoteIdByTitle(title);
@@ -170,7 +196,7 @@ namespace BuisinessLayer.service.serviceImpl
 
             // Delete the user note
             return await _noteRepository.DeleteUserNote(userNoteId);
-        }
+        }*/
 
         // Implement other business logic methods as needed
 
@@ -181,6 +207,28 @@ namespace BuisinessLayer.service.serviceImpl
             return await _noteRepository.GetUserNotesByUserId(userId);
         }
 
+        public Task<bool> DeleteUserNoteByTitle(string title)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public async Task<bool> DeleteUserNotesById(string userId, int noteId)
+        {
+            // Implement logic to delete user notes by ID using the repository
+            return await _noteRepository.DeleteUserNotesById(userId, noteId);
+        }
+
+        public async Task<UserNote> GetUserNotesById(string userId, int noteId)
+        {
+            // Implement logic to get user notes by ID using the repository
+            return await _noteRepository.GetUserNotesById(userId, noteId);
+        }
+        public async Task<UserNoteRequest> UpdateUserNotesById(string userId, int noteId, UserNoteRequest note)
+        {
+            // Implement logic to update user notes by ID using the repository
+            return await _noteRepository.UpdateUserNotesById(userId, noteId, note);
+        }
     }
 }
 

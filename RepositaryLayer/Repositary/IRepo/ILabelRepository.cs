@@ -11,10 +11,13 @@ namespace RepositaryLayer.Repositary.IRepo
 {
     public interface ILabelRepository
     {
-        public Task<ActionResult<LabelsRequest>> CreateLabel(LabelsRequest label);
+        public Task<ActionResult<LabelsRequest>> CreateLabel(string userId,LabelsRequest label);
         public Task<Label> EditLabel(Label label);
-        public Task<int> DeleteLabel(int labelId);
-        public Task<int> RemoveLabel(int userId, int noteId);
+
+        Task<bool> DeleteLabelById(string userId, int labelId);
+        Task<Label> GetLabelById(string userId, int labelId);
+
+
         public Task<List<Label>> GetUsersLabelsList(int userId);
         public Task<List<UserNote>> GetNotesByUserId(int userId);
 

@@ -10,9 +10,9 @@ namespace RepositaryLayer.Repositary.IRepo
 {
     public interface IUserNoteRepository
     {
-        public Task<UserNoteRequest> AddUserNote(UserNoteRequest note);
-        public Task<bool> DeleteUserNote(int id);
-        public Task<UserNote> UpdateUserNote(UserNote note);
+        public Task<UserNoteRequest> AddUserNote(string userId, UserNoteRequest note);
+        public Task<bool> DeleteUserNote(string userId, int noteId);
+        public Task<UserNote> UpdateUserNote(string userId, int noteId, UserNoteRequest noteRequest);
         public Task<UserNote> GetUserNoteById(int id);
         public Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorId(int collaboratorId);
         public Task<bool> DeleteUserNoteByTitle(string title);
@@ -20,5 +20,9 @@ namespace RepositaryLayer.Repositary.IRepo
 
         public Task<List<UserNote>> GetUserNotesByUserId(int userId);
         // Add other CRUD methods as needed
+
+        Task<bool> DeleteUserNotesById(string userId, int noteId);
+        Task<UserNote> GetUserNotesById(string userId, int noteId);
+        Task<UserNoteRequest> UpdateUserNotesById(string userId, int noteId, UserNoteRequest note);
     }
 }

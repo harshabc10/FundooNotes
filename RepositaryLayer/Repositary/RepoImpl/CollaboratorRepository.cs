@@ -23,7 +23,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<CollaboratorRequest> AddCollaborator(CollaboratorRequest collaborator)
+        public async Task<CollaboratorRequest> AddCollaborator(string userId, CollaboratorRequest collaborator)
         {
             try
             {
@@ -34,20 +34,20 @@ namespace RepositaryLayer.Repositary.RepoImpl
 
                 using (var connection = _context.CreateConnection())
                 {
-                    int id = await connection.ExecuteScalarAsync<int>(sql, new
+                    int collaboratorId = await connection.ExecuteScalarAsync<int>(sql, new
                     {
-                        collaborator.UserId,
+                        UserId = userId, // Use the provided userId parameter
                         collaborator.UserNoteId,
                         collaborator.CollaboratorEmail
                     });
 
-                    // No need to set collaborator.CollaboratorId here
+                   
 
                     // Send email to collaborator
                     await SendEmail(collaborator.CollaboratorEmail, "You have been added as a collaborator", "You have been added as a collaborator to a note.");
                     _logger.Info("Collaborator added successfully.");
 
-                    // Since CollaboratorId is an identity column, you can return collaborator as-is
+                    // Return the collaborator with the updated CollaboratorId
                     return collaborator;
                 }
             }
@@ -57,6 +57,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 throw new Exception("Error adding collaborator to the database.", ex);
             }
         }
+
 
 
         private async Task SendEmail(string toEmail, string subject, string body)
@@ -93,15 +94,15 @@ namespace RepositaryLayer.Repositary.RepoImpl
             }
         }
 
-        public async Task<bool> DeleteCollaborator(int collaboratorId)
+        public async Task<bool> DeleteCollaboratorById(string userId, int collaboratorId)
         {
             try
             {
-                string sql = "DELETE FROM Collaborators WHERE CollaboratorId = @CollaboratorId";
+                string sql = "DELETE FROM Collaborators WHERE UserId = @UserId AND CollaboratorId = @CollaboratorId";
 
                 using (var connection = _context.CreateConnection())
                 {
-                    int affectedRows = await connection.ExecuteAsync(sql, new { CollaboratorId = collaboratorId });
+                    int affectedRows = await connection.ExecuteAsync(sql, new { CollaboratorId = collaboratorId , UserId = userId });
                     _logger.Info("Deleted Collaborators Successfully");
                     return affectedRows > 0;
 
@@ -114,15 +115,16 @@ namespace RepositaryLayer.Repositary.RepoImpl
             }
         }
 
-        public async Task<Collaborator> GetCollaborator(int collaboratorId)
+
+        public async Task<Collaborator> GetCollaboratorById(string userId, int collaboratorId)
         {
             try
             {
-                string sql = "SELECT * FROM Collaborators WHERE CollaboratorId = @CollaboratorId";
+                string sql = "SELECT * FROM Collaborators WHERE  CollaboratorId = @CollaboratorId AND UserId = @UserId";
 
                 using (var connection = _context.CreateConnection())
                 {
-                    var collaborator = await connection.QueryFirstOrDefaultAsync<Collaborator>(sql, new { CollaboratorId = collaboratorId });
+                    var collaborator = await connection.QueryFirstOrDefaultAsync<Collaborator>(sql, new { CollaboratorId = collaboratorId, UserId = userId });
                     _logger.Info("Getting Collaborators Successfully");
                     return collaborator;
                 }

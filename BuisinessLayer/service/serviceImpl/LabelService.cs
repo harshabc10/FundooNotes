@@ -18,10 +18,10 @@ namespace BuisinessLayer.service.serviceImpl
             _labelRepository = labelRepository;
         }
 
-        public async Task<ActionResult<LabelsRequest>> CreateLabel(LabelsRequest label)
+        public async Task<ActionResult<LabelsRequest>> CreateLabel(string userId,LabelsRequest label)
         {
             // Implement the logic to create a new label in the repository
-            var createdLabel= await _labelRepository.CreateLabel(label);
+            var createdLabel= await _labelRepository.CreateLabel(userId,label);
             return createdLabel;
         }
 
@@ -32,16 +32,14 @@ namespace BuisinessLayer.service.serviceImpl
             return updatedLabel;
         }
 
-        public Task<int> DeleteLabel(int labelId)
+        public async Task<bool> DeleteLabelById(string userId, int labelId)
         {
-            // Implement the logic to delete a label by its ID in the repository
-            return _labelRepository.DeleteLabel(labelId);
+            return await _labelRepository.DeleteLabelById(userId, labelId);
         }
 
-        public Task<int> RemoveLabel(int userId, int noteId)
+        public async Task<Label> GetLabelById(string userId, int labelId)
         {
-            // Implement the logic to remove a label from a user's note in the repository
-            return _labelRepository.RemoveLabel(userId, noteId);
+            return await _labelRepository.GetLabelById(userId, labelId);
         }
 
         public Task<List<Label>> GetUsersLabelsList(int userId)

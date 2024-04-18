@@ -24,12 +24,12 @@ namespace BuisinessLayer.service.serviceImpl
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<CollaboratorRequest> AddCollaborator(CollaboratorRequest collaborator)
+        public async Task<CollaboratorRequest> AddCollaborator(string userId, CollaboratorRequest collaborator)
         {
             // Validate input (optional)
 
             // Add collaborator to the repository
-            var addedCollaborator = await _collaboratorRepository.AddCollaborator(collaborator);
+            var addedCollaborator = await _collaboratorRepository.AddCollaborator(userId,collaborator);
 
             // Send invitation email to the collaborator
             /*await SendCollaboratorInvitationEmail(collaborator.CollaboratorEmail);*/
@@ -37,18 +37,18 @@ namespace BuisinessLayer.service.serviceImpl
             return addedCollaborator;
         }
 
-        public async Task<bool> DeleteCollaborator(int collaboratorId)
+        public async Task<bool> DeleteCollaboratorById(string userId, int collaboratorId)
         {
             // Delete collaborator from the repository
-            var isDeleted = await _collaboratorRepository.DeleteCollaborator(collaboratorId);
+            var isDeleted = await _collaboratorRepository.DeleteCollaboratorById(userId,collaboratorId);
 
             return isDeleted;
         }
 
-        public async Task<Collaborator> GetCollaborator(int collaboratorId)
+        public async Task<Collaborator> GetCollaboratorById(string userId, int collaboratorId)
         {
             // Get collaborator from the repository
-            var collaborator = await _collaboratorRepository.GetCollaborator(collaboratorId);
+            var collaborator = await _collaboratorRepository.GetCollaboratorById(userId,collaboratorId);
 
             return collaborator;
         }

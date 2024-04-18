@@ -25,7 +25,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<UserNoteRequest> AddUserNote(UserNoteRequest note)
+        public async Task<UserNoteRequest> AddUserNote(string userId, UserNoteRequest note)
         {
             try
             {
@@ -40,7 +40,6 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 {
                     int id = await connection.ExecuteScalarAsync<int>(sql, new
                     {
-                        note.UserId,
                         note.Title,
                         note.Description,
                         note.Color,
@@ -51,8 +50,6 @@ namespace RepositaryLayer.Repositary.RepoImpl
                         note.IsTrash
                     });
 
-                    // Set the ID of the user note object
-                    note.UserId = id;
 
                     // Return the modified user note object
                     return note;
@@ -67,7 +64,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
 
 
 
-        public async Task<bool> DeleteUserNote(int id)
+        /*public async Task<bool> DeleteUserNote(int id)
         {
             try
             {
@@ -89,16 +86,43 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 // Log the exception or handle it as needed
                 throw new Exception("Error deleting user note from the database.", ex);
             }
+        }*/
+
+        public async Task<bool> DeleteUserNote(string userId, int noteId)
+        {
+            try
+            {
+                // SQL query to delete a user note from the UserNotes table based on the note ID and user ID
+                string sql = "DELETE FROM UserNotes WHERE Id = @NoteId AND UserId = @UserId";
+
+                // Create an anonymous object containing parameter values for the query
+                var parameters = new { NoteId = noteId, UserId = userId };
+
+                // Execute the SQL query using Dapper and retrieve the number of affected rows
+                using (var connection = _context.CreateConnection())
+                {
+                    int affectedRows = await connection.ExecuteAsync(sql, parameters);
+
+                    // Check if any rows were affected (i.e., if the user note was deleted)
+                    bool isDeleted = affectedRows > 0;
+                    return isDeleted;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                throw new Exception("Error deleting user note from the database.", ex);
+            }
         }
 
 
 
-        public async Task<UserNote> UpdateUserNote(UserNote note)
-        {
-            try
-            {
-                // SQL query to update a user note in the UserNotes table
-                string sql = @"
+
+        /*        public async Task<UserNote> UpdateUserNote(string userId, UserNote note)
+                {
+                    try
+                    {
+                        string sql = @"
                     UPDATE UserNotes
                     SET Title = @Title,
                         Description = @Description,
@@ -110,31 +134,62 @@ namespace RepositaryLayer.Repositary.RepoImpl
                         IsTrash = @IsTrash
                     WHERE Id = @Id;";
 
-                // Execute the SQL query using Dapper
-                using (var connection = _context.CreateConnection())
-                {
-                    await connection.ExecuteAsync(sql, new
-                    {
-                        note.Id,
-                        note.Title,
-                        note.Description,
-                        note.Color,
-                        note.ImagePaths,
-                        note.Reminder,
-                        note.IsArchive,
-                        note.IsPinned,
-                        note.IsTrash
-                    });
+                        using (var connection = _context.CreateConnection())
+                        {
+                            await connection.ExecuteAsync(sql, note);
+                        }
 
-                    return note;
-                }
-            }
-            catch (Exception ex)
+                        return note;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the exception or handle it as needed
+                        throw new Exception("Error updating user note in the database.", ex);
+                    }
+                }*/
+
+        public async Task<UserNote> UpdateUserNote(string userId, int noteId, UserNoteRequest noteRequest)
+        {
+            // Build the SQL query for updating the user note
+            string sql = @"
+                UPDATE UserNotes 
+                SET 
+                    Title = @Title,
+                    Description = @Description,
+                    Color = @Color,
+                    ImagePaths = @ImagePaths,
+                    Reminder = @Reminder,
+                    IsArchive = @IsArchive,
+                    IsPinned = @IsPinned,
+                    IsTrash = @IsTrash
+                WHERE Id = @Id AND UserId = @UserId";
+
+            // Create an anonymous object containing parameter values for the query
+            var parameters = new
             {
-                // Log the exception or handle it as needed
-                throw new Exception("Error updating user note in the database.", ex);
+                Id = noteId,
+                UserId = userId,
+                Title = noteRequest.Title,
+                Description = noteRequest.Description,
+                Color = noteRequest.Color,
+                ImagePaths = noteRequest.ImagePaths,
+                Reminder = noteRequest.Reminder,
+                IsArchive = noteRequest.IsArchive,
+                IsPinned = noteRequest.IsPinned,
+                IsTrash = noteRequest.IsTrash,
+            };
+
+            // Execute the update query using Dapper
+            using (var connection = _context.CreateConnection())
+            {
+                await connection.ExecuteAsync(sql, parameters);
             }
+
+            // Return the updated user note
+            var updatedNote = await GetUserNoteById(noteId);
+            return updatedNote;
         }
+
 
         public async Task<UserNote> GetUserNoteById(int id)
         {
@@ -186,5 +241,72 @@ namespace RepositaryLayer.Repositary.RepoImpl
             }
         }
         // Implement other CRUD methods as needed
+
+        public async Task<bool> DeleteUserNotesById(string userId, int noteId)
+        {
+            // Implement logic to delete user notes by ID from the database using Dapper
+            using (var connection = _context.CreateConnection())
+            {
+                string query = "DELETE FROM UserNotes WHERE UserId = @UserId AND Id = @NoteId";
+                int affectedRows = await connection.ExecuteAsync(query, new { UserId = userId, NoteId = noteId });
+
+                return affectedRows > 0;
+            }
+        }
+
+        public async Task<UserNote> GetUserNotesById(string userId, int noteId)
+        {
+            // Implement logic to get user notes by ID from the database using Dapper
+            using (var connection = _context.CreateConnection())
+            {
+                string query = "SELECT * FROM UserNotes WHERE UserId = @UserId AND Id = @NoteId";
+                return await connection.QueryFirstOrDefaultAsync<UserNote>(query, new { UserId = userId, NoteId = noteId });
+            }
+        }
+
+        public async Task<UserNoteRequest> UpdateUserNotesById(string userId, int noteId, UserNoteRequest note)
+        {
+            // Implement logic to update user notes by ID in the database using Dapper
+            using (var connection = _context.CreateConnection())
+            {
+                string query = @"UPDATE UserNotes 
+                 SET Title = @Title, 
+                     Description = @Description, 
+                     Color = @Color, 
+                     ImagePaths = @ImagePaths, 
+                     Reminder = @Reminder, 
+                     IsArchive = @IsArchive, 
+                     IsPinned = @IsPinned, 
+                     IsTrash = @IsTrash 
+                 WHERE UserId = @UserId AND Id = @NoteId";
+
+                int affectedRows = await connection.ExecuteAsync(query, new
+                {
+                    Title = note.Title,
+                    Description = note.Description,
+                    Color = note.Color,
+                    ImagePaths = note.ImagePaths,
+                    Reminder = note.Reminder,
+                    IsArchive = note.IsArchive,
+                    IsPinned = note.IsPinned,
+                    IsTrash = note.IsTrash,
+                    UserId = userId,
+                    NoteId = noteId
+                });
+
+                if (affectedRows > 0)
+                {
+                    // If update is successful, fetch and return the updated note
+                    string selectQuery = "SELECT * FROM UserNotes WHERE UserId = @UserId AND Id = @NoteId";
+                    return await connection.QueryFirstOrDefaultAsync<UserNoteRequest>(selectQuery, new { UserId = userId, NoteId = noteId });
+                }
+                else
+                {
+                    // If no rows were affected, return null indicating the note was not updated
+                    return null;
+                }
+            }
+        }
+
     }
 }

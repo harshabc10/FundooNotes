@@ -138,7 +138,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
             _redis = redis;
             _cache = _redis.GetDatabase();
         }
-        public async Task<ActionResult<LabelsRequest>> CreateLabel(LabelsRequest label)
+        public async Task<ActionResult<LabelsRequest>> CreateLabel(string userId, LabelsRequest label)
         {
             try
             {
@@ -153,13 +153,12 @@ namespace RepositaryLayer.Repositary.RepoImpl
                     int labelId = await connection.ExecuteScalarAsync<int>(query, new
                     {
                         label.LabelName,
-                        label.UserId,
                         label.NoteId
                     });
 
 
                     // Clear cache after creating a new label
-                    string cacheKey = $"UserLabels:{label.UserId}";
+                    string cacheKey = $"UserLabels:{userId}";
                     await _cache.KeyDeleteAsync(cacheKey);
 
                     // Return the created label
@@ -196,13 +195,13 @@ namespace RepositaryLayer.Repositary.RepoImpl
             }
         }
 
-        public async Task<int> DeleteLabel(int labelId)
+        public async Task<bool> DeleteLabelById(string userId, int labelId)
         {
             // Implement logic to delete a label from the database
             using (var connection = _context.CreateConnection())
             {
-                string query = "DELETE FROM Labels WHERE LabelId = @LabelId";
-                int affectedRows = await connection.ExecuteAsync(query, new { LabelId = labelId });
+                string query = "DELETE FROM Labels WHERE UserId = @UserId AND LabelId = @LabelId";
+                int affectedRows = await connection.ExecuteAsync(query, new { UserId = userId, LabelId = labelId });
 
                 // Clear cache after deleting a label
                 if (affectedRows > 0)
@@ -211,28 +210,20 @@ namespace RepositaryLayer.Repositary.RepoImpl
                     await _cache.KeyDeleteAsync(cacheKey);
                 }
 
-                return affectedRows;
+                return affectedRows > 0; // Return true if rows were affected, false otherwise
             }
         }
 
-        public async Task<int> RemoveLabel(int userId, int noteId)
+        public async Task<Label> GetLabelById(string userId, int labelId)
         {
-            // Implement logic to remove a label from a note
+            // Implement retrieval logic using Dapper or your preferred method
             using (var connection = _context.CreateConnection())
             {
-                string query = "DELETE FROM Labels WHERE UserId = @UserId AND NoteId = @NoteId";
-                int affectedRows = await connection.ExecuteAsync(query, new { UserId = userId, NoteId = noteId });
-
-                // Clear cache after removing a label
-                if (affectedRows > 0)
-                {
-                    string cacheKey = $"UserLabels:{userId}";
-                    await _cache.KeyDeleteAsync(cacheKey);
-                }
-
-                return affectedRows;
+                string query = "SELECT * FROM Labels WHERE UserId = @UserId AND LabelId = @LabelId";
+                return await connection.QueryFirstOrDefaultAsync<Label>(query, new { UserId = userId, LabelId = labelId });
             }
         }
+
 
         public async Task<List<Label>> GetUsersLabelsList(int userId)
         {

@@ -15,7 +15,7 @@ namespace FundooNotes.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
 
     public class LabelsController : ControllerBase
     {
@@ -225,64 +225,81 @@ namespace FundooNotes.Controllers
                     return NotFound("No labels found for the specified user ID.");
                 }*/
 
-        [HttpPost("CreateLabel")]
-
-
-        public async Task<ActionResult<ResponseModel<LabelsRequest>>> CreateLabel(LabelsRequest label)
+        [HttpPost]
+        public async Task<ActionResult<LabelsRequest>> CreateLabel([FromBody] LabelsRequest labelRequest)
         {
-            if (label == null)
-            {
-                return BadRequest("Label data is required.");
-            }
-
-            // You can add more validation logic here if needed
-
             try
             {
-                // Insert label into the database using your repository
-                var result = await _labelService.CreateLabel(label);
+                // Validate label request
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-                // Check if the insertion was successful
-                if (result!=null)
+                // Get the user ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
                 {
-                    var response = new ResponseModel<LabelsRequest>
-                    {
-                        Data = label,
-                        Message = "Label created successfully."
-                        // You can include more properties in the response model as needed
-                    };
-                    return Ok(response);
+                    return Unauthorized("User ID not found in claims.");
                 }
-                else
+
+                // Extract the user ID
+                var userId = userIdClaim.Value;
+
+                // Optionally, you can validate the user ID or perform additional checks here
+
+                // Proceed with creating the label
+                var createdLabel = await _labelService.CreateLabel(userId, labelRequest);
+                var response = new ResponseModel<LabelsRequest>
                 {
-                    return StatusCode(500, "Failed to create label. Please try again later.");
-                }
+                    Message = "Label created successfully",
+                    Data = labelRequest
+                };
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                // Log the exception for debugging purposes
-                // You can customize the error message based on the exception type
-                return StatusCode(500, $"An error occurred while processing your request.{ex.Message}");
+                var response = new ResponseModel<LabelsRequest>
+                {
+                    Success = false,
+                    Message = $"Error creating label: {ex.Message}"
+                };
+                return StatusCode(500, response);
             }
         }
 
 
-
-
-
-
-        [HttpPut("EditLabel/{labelId}")]
-        public async Task<IActionResult> EditLabel(int labelId, Label label)
+        [HttpPut("{labelId}")]
+        public async Task<IActionResult> EditLabelByUserId(int labelId, EditLabelRequestDto requestDto)
         {
             try
             {
-                label.LabelId = labelId;
+                // Get the user ID from JWT claims
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                {
+                    return Unauthorized("User ID not found in claims.");
+                }
+
+                // Create a Label entity with the provided data
+                var label = new Label
+                {
+                    LabelId = labelId,
+                    UserId = int.Parse(userId),
+                LabelName = requestDto.LabelName,
+                    NoteId = requestDto.NoteId
+                };
+
+                // Call the label service to update the label
                 var updatedLabel = await _labelService.EditLabel(label);
+
+                // Prepare the response
                 var response = new ResponseModel<Label>
                 {
                     Message = "Label updated successfully",
                     Data = updatedLabel
                 };
+
                 return Ok(response);
             }
             catch (Exception ex)
@@ -296,29 +313,30 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpDelete("DeleteLabel/{labelId}")]
-        public async Task<IActionResult> DeleteLabel(int labelId)
+
+
+        [HttpDelete("{labelId}")]
+        public async Task<IActionResult> DeleteLabelById(int labelId)
         {
             try
             {
-                int rowsAffected = await _labelService.DeleteLabel(labelId);
-                if (rowsAffected > 0)
+                // Get the user ID from JWT claims
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
                 {
-                    var response = new ResponseModel<bool>
-                    {
-                        Message = "Label deleted successfully",
-                        Data = true
-                    };
-                    return Ok(response);
+                    return Unauthorized("User ID not found in claims.");
+                }
+
+                // Call the label service to delete the label
+                var isDeleted = await _labelService.DeleteLabelById(userId, labelId);
+
+                if (isDeleted)
+                {
+                    return Ok(true);
                 }
                 else
                 {
-                    var response = new ResponseModel<bool>
-                    {
-                        Success = false,
-                        Message = "Label not found"
-                    };
-                    return NotFound(response);
+                    return NotFound("Label not found.");
                 }
             }
             catch (Exception ex)
@@ -332,59 +350,45 @@ namespace FundooNotes.Controllers
             }
         }
 
-        [HttpDelete("RemoveLabel")]
-        public async Task<IActionResult> RemoveLabel(int userId, int noteId)
+        [HttpGet("{labelId}")]
+        public async Task<IActionResult> GetLabelById(int labelId)
         {
             try
             {
-                int rowsAffected = await _labelService.RemoveLabel(userId, noteId);
-                if (rowsAffected > 0)
+                // Get the user ID from JWT claims
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
                 {
-                    var response = new ResponseModel<bool>
+                    return Unauthorized("User ID not found in claims.");
+                }
+
+                // Call the label service to get the label by ID
+                var label = await _labelService.GetLabelById(userId, labelId);
+
+                if (label != null)
+                {
+                    var response = new ResponseModel<Label>
                     {
-                        Message = "Label removed from note successfully",
-                        Data = true
+                        Message = "Label retrieved successfully",
+                        Data = label
                     };
                     return Ok(response);
                 }
                 else
                 {
-                    var response = new ResponseModel<bool>
-                    {
-                        Success = false,
-                        Message = "Label not found on the note"
-                    };
-                    return NotFound(response);
+                    return NotFound("Label not found.");
                 }
             }
             catch (Exception ex)
             {
-                var response = new ResponseModel<bool>
+                var response = new ResponseModel<Label>
                 {
                     Success = false,
-                    Message = $"Error removing label from note: {ex.Message}"
+                    Message = $"Error retrieving label: {ex.Message}"
                 };
                 return StatusCode(500, response);
             }
         }
-
-
-        /*        [HttpGet("{userId}")]
-                public async Task<IActionResult> GetUsersLabelsList(int userId)
-                {
-                    try
-                    {
-                        var labels = await _labelService.GetUsersLabelsList(userId);
-                        return Ok(labels);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log the exception or handle it as needed
-                        return StatusCode(500, $"Error getting user's labels: {ex.Message}");
-                    }
-                }*/
-
-
 
 
     }

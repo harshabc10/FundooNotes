@@ -10,9 +10,13 @@ namespace RepositaryLayer.Repositary.IRepo
 {
     public interface ICollaboratorRepository
     {
-        public Task<CollaboratorRequest> AddCollaborator(CollaboratorRequest collaborator);
-        public Task<bool> DeleteCollaborator(int collaboratorId);
-        public Task<Collaborator> GetCollaborator(int collaboratorId);
+        public Task<CollaboratorRequest> AddCollaborator(string userId,CollaboratorRequest collaborator);
+
+        Task<bool> DeleteCollaboratorById(string userId, int collaboratorId);
+
+        Task<Collaborator> GetCollaboratorById(string userId, int collaboratorId);
+        /*        public Task<bool> DeleteCollaborator(int userId, int collaboratorId);
+                public Task<Collaborator> GetCollaborator(int collaboratorId);*/
     }
 
 }

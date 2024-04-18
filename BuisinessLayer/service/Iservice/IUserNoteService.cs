@@ -1,5 +1,4 @@
 ﻿using ModelLayer.Entity;
-using ModelLayer.Entity;
 using ModelLayer.Models.RequestDto;
 using System;
 using System.Collections.Generic;
@@ -11,9 +10,9 @@ namespace BuisinessLayer.service.Iservice
 {
     public interface IUserNoteService
     {
-        public Task<UserNoteRequest> AddUserNote(UserNoteRequest note);
-        public Task<bool> DeleteUserNote(int id);
-        public Task<UserNote> UpdateUserNote(UserNote note);
+        public Task<UserNoteRequest> AddUserNote(string userId,UserNoteRequest note);
+        public Task<bool> DeleteUserNote(string userId, int noteId);
+        Task<UserNote> UpdateUserNote(string userId, int noteId, UserNoteRequest noteRequest);
         public Task<UserNote> GetUserNoteById(int id);
         public Task<IEnumerable<UserNote>> GetUserNotesByCollaboratorId(int collaboratorId);
 
@@ -21,7 +20,12 @@ namespace BuisinessLayer.service.Iservice
         public Task<bool> DeleteUserNoteByTitle(string title);
 
         public Task<List<UserNote>> GetUserNotesByUserId(int userId);
+
+
         // Add other business logic methods as needed
+        Task<bool> DeleteUserNotesById(string userId, int noteId);
+        Task<UserNote> GetUserNotesById(string userId, int noteId);
+        Task<UserNoteRequest> UpdateUserNotesById(string userId, int noteId, UserNoteRequest note);
     }
 
 }
