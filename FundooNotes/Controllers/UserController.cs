@@ -3,6 +3,7 @@ using BuisinessLayer.Filter.ExceptionFilter;
 using BuisinessLayer.service.Iservice;
 using Confluent.Kafka;
 using Google.Apis.Gmail.v1.Data;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -21,46 +22,20 @@ namespace FundooNotes.Controllers
 {
     [Route("api/[controller]/")]
     [ApiController]
+    [EnableCors]
     public class UserController : ControllerBase
     {
 
         private readonly IUserService service;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IProducer<string, string> _kafkaProducer;
-        private readonly IConsumer<string, string> _kafkaConsumer;
-        private CancellationTokenSource _cancellationTokenSource;
 
         public UserController(IUserService service, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             this.service = service;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
-
-            // Initialize Kafka producer
-            var producerConfig = new ProducerConfig
-            {
-                BootstrapServers = _configuration["Kafka:BootstrapServers"]
-            };
-            _kafkaProducer = new ProducerBuilder<string, string>(producerConfig).Build();
-
-            // Initialize Kafka consumer
-            var consumerConfig = new ConsumerConfig
-            {
-                BootstrapServers = _configuration["Kafka:BootstrapServers"],
-                GroupId = _configuration["Kafka:ConsumerGroupId"],
-                AutoOffsetReset = AutoOffsetReset.Earliest
-            };
-            _kafkaConsumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-
-            // Subscribe to Kafka topic
-            _kafkaConsumer.Subscribe(_configuration["Kafka:Topic"]);
-
-            // Initialize cancellation token source for stopping the consumer
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            // Start Kafka consumer background task
-            Task.Run(() => ConsumeKafkaMessages(_cancellationTokenSource.Token));
+            
         }
 
         [HttpPost]
@@ -75,21 +50,12 @@ namespace FundooNotes.Controllers
                     Message = "User created successfully.",
                     Data = new UserResponce // Assuming 'UserResponse' is the response model for user creation
                     {
-                        Id = userId,
                         FirstName = request.FirstName,
                         LastName = request.LastName,
-                        Email = request.Email
+                        Email = request.Email,
+                        Id=userId
                     }
                 };
-
-                // Produce Kafka message
-                var kafkaMessage = new Message<string, string>
-                {
-                    Key = "user_created",
-                    Value = JsonConvert.SerializeObject(userResponse) // Convert message to JSON string
-                };
-
-                await _kafkaProducer.ProduceAsync(_configuration["Kafka:Topic"], kafkaMessage);
 
                 return Ok(userResponse);
             }
@@ -100,43 +66,7 @@ namespace FundooNotes.Controllers
         }
 
 
-        private async Task ConsumeKafkaMessages(CancellationToken cancellationToken)
-        {
-            try
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var consumeResult = _kafkaConsumer.Consume(cancellationToken);
-                    var message = consumeResult.Message.Value;
-                    Console.WriteLine($"Received Kafka message: {message}");
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Consumer cancellation requested
-            }
-            finally
-            {
-                _kafkaConsumer.Close();
-            }
-        }
 
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _kafkaProducer?.Dispose();
-                _kafkaConsumer?.Dispose();
-                _cancellationTokenSource?.Dispose();
-            }
-        }
 
 
         /*        [HttpPost]
@@ -231,7 +161,7 @@ namespace FundooNotes.Controllers
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddHours(1);
+            var expires = DateTime.UtcNow.AddDays(100);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],

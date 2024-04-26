@@ -52,6 +52,22 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
     return ConnectionMultiplexer.Connect(redisConnectionString);
 });
 
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:4200", "https://localhost:7004")
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+            .AllowAnyOrigin();
+        });
+});
+
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------
 
 //loggers
 /*builder.Host.ConfigureLogging(logging =>
@@ -178,6 +194,8 @@ builder.Services.AddAuthentication(options =>
 
 //Ending...
 var app = builder.Build();
+app.UseCors("AllowSpecificOrigin");
+app.UseCors();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -193,6 +211,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+
 app.UseHttpsRedirection();
 app.UseSession();
 
@@ -200,5 +219,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 
 app.Run();

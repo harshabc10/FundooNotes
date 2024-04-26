@@ -26,6 +26,9 @@ namespace BuisinessLayer.service.Iservice
         Task<bool> DeleteUserNotesById(string userId, int noteId);
         Task<UserNote> GetUserNotesById(string userId, int noteId);
         Task<UserNoteRequest> UpdateUserNotesById(string userId, int noteId, UserNoteRequest note);
+
+        Task<bool> ArchiveUserNote(string userId, int noteId);
+        Task<bool> TrashUserNote(string userId, int noteId);
     }
 
 }

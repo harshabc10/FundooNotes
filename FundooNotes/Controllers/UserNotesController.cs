@@ -390,7 +390,7 @@ namespace FundooNotes.Controllers
                 }
                 else
                 {
-                    
+
                     return NotFound(new ResponseModel<UserNoteRequest> { Message = "User note not found or unauthorized" });
                 }
             }
@@ -406,6 +406,86 @@ namespace FundooNotes.Controllers
         }
 
 
+        [HttpPost("archive")]
+        public async Task<ActionResult<ResponseModel<bool>>> ArchiveUserNote(ArchiveTrashRequest request)
+        {
+            try
+            {
+                // Get the user ID from JWT claims
+                var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                {
+                    return Unauthorized("User ID not found in claims.");
+                }
+
+                // Call the service method to archive the user note
+                bool isArchived = await _noteService.ArchiveUserNote(userId, request.NoteId);
+
+                if (isArchived)
+                {
+                    var response = new ResponseModel<bool>
+                    {
+                        Message = "Note Archived Successfully",
+                        Data = true
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    return NotFound(new ResponseModel<bool> { Message = "User note not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                var response = new ResponseModel<bool>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+                return StatusCode(500, response);
+            }
+        }
+
+        [HttpPost("trash")]
+        public async Task<ActionResult<ResponseModel<bool>>> TrashUserNote(ArchiveTrashRequest request)
+        {
+            try
+            {
+                // Get the user ID from JWT claims
+                var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                {
+                    return Unauthorized("User ID not found in claims.");
+                }
+
+                bool isTrashed = await _noteService.TrashUserNote(userId, request.NoteId);
+
+                if (isTrashed)
+                {
+                    var response = new ResponseModel<bool>
+                    {
+                        Message = "Note Trashed Successfully",
+                        Data = true
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    return NotFound(new ResponseModel<bool> { Message = "User note not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                var response = new ResponseModel<bool>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+                return StatusCode(500, response);
+            }
+
+        }
+    }
 
         //edit needed
 
@@ -481,9 +561,7 @@ namespace FundooNotes.Controllers
                 }*/
 
 
-
     }
-}
 
 
 /*

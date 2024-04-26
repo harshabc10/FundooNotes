@@ -102,7 +102,7 @@ namespace FundooNotes.Controllers
                 var response = new ResponseModel<CollaboratorRequest>
                 {
                     Success = false,
-                    Message = $"Error adding collaborator: {ex.Message}"
+                    Message = $"The Note ID or User ID does not exist.: {ex.Message}"
                 };
                 return StatusCode(500, response);
             }

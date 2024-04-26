@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading.Tasks;
 using NLog;
 using ILogger = NLog.ILogger;
+using Confluent.Kafka;
+using RepositaryLayer.Helper;
 
 
 namespace RepositaryLayer.Repositary.RepoImpl
@@ -29,16 +31,41 @@ namespace RepositaryLayer.Repositary.RepoImpl
         {
             try
             {
-                string query = "insert into Users values (@UserFirstName, @UserLastName, @UserEmail, @UserPassword)";
+                string query = "insert into Users values (@UserFirstName, @UserLastName, @UserEmail, @UserPassword); SELECT SCOPE_IDENTITY()";
                 var connection = context.CreateConnection();
 
                 //return await connection.ExecuteAsync(query, entity);
-                int rowsAffected = await connection.ExecuteAsync(query, entity);
+                int userId = await connection.ExecuteScalarAsync<int>(query, entity);
 
                 // Log information message
-                logger.Info("User created successfully. Rows affected: {0}", rowsAffected);
-               
-                return rowsAffected;
+                logger.Info("User created successfully. UserId: {0}", userId);
+
+                //---------------------------
+                var registrationDetailsForPublishing = new RegistrationDetailsForPublishing(entity);
+
+                // Serialize registration details to a JSON string
+                var registrationDetailsJson = Newtonsoft.Json.JsonConvert.SerializeObject(registrationDetailsForPublishing);
+
+                // Get Kafka producer configuration
+                var producerConfig = Helper.Helper.GetProducerConfig();
+                // Create a Kafka producer
+                using (var producer = new ProducerBuilder<Null, string>(producerConfig).Build())
+                {
+                    try
+                    {
+                        // Publish registration details to Kafka topic
+                        await producer.ProduceAsync("fundoo-user-registration", new Message<Null, string> { Value = registrationDetailsJson });
+                        Console.WriteLine("Registration details published to Kafka topic.");
+                    }
+                    catch (ProduceException<Null, string> e)
+                    {
+                        Console.WriteLine($"Failed to publish registration details to Kafka topic: {e.Error.Reason}");
+                    }
+                }
+
+                //-----------------------
+
+                return userId;
             }
             catch (Exception ex)
             {

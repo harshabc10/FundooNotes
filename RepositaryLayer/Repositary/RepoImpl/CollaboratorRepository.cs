@@ -27,27 +27,43 @@ namespace RepositaryLayer.Repositary.RepoImpl
         {
             try
             {
-                string sql = @"
+                // Check if the UserNoteId and UserId exist
+                string checkExistenceSql = @"
+            SELECT COUNT(*) 
+            FROM UserNotes 
+            WHERE Id = @UserNoteId AND UserId = @UserId;";
+
+                using (var connection = _context.CreateConnection())
+                {
+                    int noteExists = await connection.ExecuteScalarAsync<int>(checkExistenceSql, new
+                    {
+                        UserId = userId,
+                        collaborator.UserNoteId
+                    });
+
+                    if (noteExists == 0)
+                    {
+                        throw new Exception("UserNoteId or UserId not found.");
+                    }
+
+                    string insertSql = @"
             INSERT INTO Collaborators (UserId, UserNoteId, CollaboratorEmail)
             VALUES (@UserId, @UserNoteId, @CollaboratorEmail);
             SELECT SCOPE_IDENTITY();";
 
-                using (var connection = _context.CreateConnection())
-                {
-                    int collaboratorId = await connection.ExecuteScalarAsync<int>(sql, new
+                    int collaboratorId = await connection.ExecuteScalarAsync<int>(insertSql, new
                     {
                         UserId = userId, // Use the provided userId parameter
                         collaborator.UserNoteId,
                         collaborator.CollaboratorEmail
                     });
 
-                   
-
                     // Send email to collaborator
                     await SendEmail(collaborator.CollaboratorEmail, "You have been added as a collaborator", "You have been added as a collaborator to a note.");
                     _logger.Info("Collaborator added successfully.");
 
                     // Return the collaborator with the updated CollaboratorId
+                    //collaborator.CollaboratorId = collaboratorId;
                     return collaborator;
                 }
             }
@@ -57,6 +73,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
                 throw new Exception("Error adding collaborator to the database.", ex);
             }
         }
+
 
 
 

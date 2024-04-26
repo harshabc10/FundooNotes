@@ -31,15 +31,17 @@ namespace RepositaryLayer.Repositary.RepoImpl
             {
                 // SQL query to insert a new user note into the UserNotes table
                 string sql = @"
-    INSERT INTO UserNotes (UserId, Title, Description, Color, ImagePaths, Reminder, IsArchive, IsPinned, IsTrash)
-    VALUES (@UserId, @Title, @Description, @Color, @ImagePaths, @Reminder, @IsArchive, @IsPinned, @IsTrash);
-    SELECT SCOPE_IDENTITY();"; // Retrieve the ID of the newly inserted record
+            INSERT INTO UserNotes (UserId, Title, Description, Color, ImagePaths, Reminder, IsArchive, IsPinned, IsTrash)
+            VALUES (@UserId, @Title, @Description, @Color, @ImagePaths, @Reminder, @IsArchive, @IsPinned, @IsTrash);
+            SELECT SCOPE_IDENTITY();"; // Retrieve the ID of the newly inserted record
 
                 // Execute the SQL query using Dapper and retrieve the ID of the inserted record
                 using (var connection = _context.CreateConnection())
                 {
-                    int id = await connection.ExecuteScalarAsync<int>(sql, new
+                    // Add the UserId parameter to the anonymous object for Dapper
+                    var parameters = new
                     {
+                        UserId = userId,
                         note.Title,
                         note.Description,
                         note.Color,
@@ -48,8 +50,9 @@ namespace RepositaryLayer.Repositary.RepoImpl
                         note.IsArchive,
                         note.IsPinned,
                         note.IsTrash
-                    });
+                    };
 
+                    int id = await connection.ExecuteScalarAsync<int>(sql, parameters);
 
                     // Return the modified user note object
                     return note;
@@ -59,6 +62,59 @@ namespace RepositaryLayer.Repositary.RepoImpl
             {
                 // Log the exception or handle it as needed
                 throw new Exception("Error adding user note to the database.", ex);
+            }
+        }
+
+
+        public async Task<bool> ArchiveUserNote(string userId, int noteId)
+        {
+            try
+            {
+                // SQL query to update the IsArchive flag for the specified note
+                string sql = "UPDATE UserNotes SET IsArchive = 1 WHERE Id = @NoteId AND UserId = @UserId";
+
+                // Create an anonymous object containing parameter values for the query
+                var parameters = new { NoteId = noteId, UserId = userId };
+
+                // Execute the SQL query using Dapper and retrieve the number of affected rows
+                using (var connection = _context.CreateConnection())
+                {
+                    int affectedRows = await connection.ExecuteAsync(sql, parameters);
+
+                    // Return true if at least one row was affected (note was archived successfully), false otherwise
+                    return affectedRows > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                throw new Exception("Error archiving user note.", ex);
+            }
+        }
+
+        public async Task<bool> TrashUserNote(string userId, int noteId)
+        {
+            try
+            {
+                // SQL query to update the IsTrash flag for the specified note
+                string sql = "UPDATE UserNotes SET IsTrash = 1 WHERE Id = @NoteId AND UserId = @UserId";
+
+                // Create an anonymous object containing parameter values for the query
+                var parameters = new { NoteId = noteId, UserId = userId };
+
+                // Execute the SQL query using Dapper and retrieve the number of affected rows
+                using (var connection = _context.CreateConnection())
+                {
+                    int affectedRows = await connection.ExecuteAsync(sql, parameters);
+
+                    // Return true if at least one row was affected (note was trashed successfully), false otherwise
+                    return affectedRows > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                throw new Exception("Error trashing user note.", ex);
             }
         }
 

@@ -229,6 +229,75 @@ namespace BuisinessLayer.service.serviceImpl
             // Implement logic to update user notes by ID using the repository
             return await _noteRepository.UpdateUserNotesById(userId, noteId, note);
         }
+
+        public async Task<bool> ArchiveUserNote(string userId, int noteId)
+        {
+            try
+            {
+                // Fetch the user note from the repository using Dapper
+                var existingNote = await _noteRepository.GetUserNoteById(noteId);
+
+                if (existingNote == null)
+                {
+                    throw new InvalidOperationException("User note not found.");
+                }
+
+                // Check if the note belongs to the requesting user
+                if (existingNote.UserId.ToString() != userId)
+                {
+                    throw new UnauthorizedAccessException("Unauthorized: User does not have permission to archive this note.");
+                }
+
+                // Update the IsArchive flag to true
+                existingNote.IsArchive = true;
+
+                // Call the repository method to update the user note using Dapper
+                var isArchived = await _noteRepository.ArchiveUserNote(userId, noteId);
+
+                return isArchived;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                throw new Exception("Error archiving user note.", ex);
+            }
+        }
+
+
+
+        public async Task<bool> TrashUserNote(string userId, int noteId)
+        {
+            try
+            {
+                // Fetch the user note from the repository using Dapper
+                var existingNote = await _noteRepository.GetUserNoteById(noteId);
+
+                if (existingNote == null)
+                {
+                    throw new InvalidOperationException("User note not found.");
+                }
+
+                // Check if the note belongs to the requesting user
+                if (existingNote.UserId.ToString() != userId)
+                {
+                    throw new UnauthorizedAccessException("Unauthorized: User does not have permission to trash this note.");
+                }
+
+                // Update the IsTrashed flag to true
+                existingNote.IsTrash = true;
+
+                // Call the repository method to update the user note using Dapper
+                var isTrashed = await _noteRepository.TrashUserNote(userId, noteId);
+
+                return isTrashed;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                throw new Exception("Error trashing user note.", ex);
+            }
+        }
+
     }
 }
 
