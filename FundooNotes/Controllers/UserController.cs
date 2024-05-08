@@ -1,62 +1,42 @@
 ﻿using BuisinessLayer.CustomException;
 using BuisinessLayer.Filter.ExceptionFilter;
-using BuisinessLayer.service.Iservice;
+using BuisinessLayer.Interface;
 using Confluent.Kafka;
+using Google.Apis.Gmail.v1.Data;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ModelLayer.Entity;
+using ModelLayer.Models.RequestDto;
+using ModelLayer.Models.ResponceDto;
+using Newtonsoft.Json;
 using RepositaryLayer.DTO.RequestDto;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading;
+using static System.Net.WebRequestMethods;
 
 namespace FundooNotes.Controllers
 {
     [Route("api/[controller]/")]
     [ApiController]
+    [EnableCors]
     public class UserController : ControllerBase
     {
 
         private readonly IUserService service;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IProducer<string, string> _kafkaProducer;
-        private readonly IConsumer<string, string> _kafkaConsumer;
-        private CancellationTokenSource _cancellationTokenSource;
 
         public UserController(IUserService service, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             this.service = service;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
-
-            // Initialize Kafka producer
-            var producerConfig = new ProducerConfig
-            {
-                BootstrapServers = _configuration["Kafka:BootstrapServers"]
-            };
-            _kafkaProducer = new ProducerBuilder<string, string>(producerConfig).Build();
-
-            // Initialize Kafka consumer
-            var consumerConfig = new ConsumerConfig
-            {
-                BootstrapServers = _configuration["Kafka:BootstrapServers"],
-                GroupId = _configuration["Kafka:ConsumerGroupId"],
-                AutoOffsetReset = AutoOffsetReset.Earliest
-            };
-            _kafkaConsumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
-
-            // Subscribe to Kafka topic
-            _kafkaConsumer.Subscribe(_configuration["Kafka:Topic"]);
-
-            // Initialize cancellation token source for stopping the consumer
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            // Start Kafka consumer background task
-            Task.Run(() => ConsumeKafkaMessages(_cancellationTokenSource.Token));
+            
         }
 
         [HttpPost]
@@ -64,18 +44,21 @@ namespace FundooNotes.Controllers
         {
             try
             {
-                var result = await service.createUser(request);
+                var userId = await service.createUser(request); // Assuming service.createUser returns an int
 
-                // Produce Kafka message
-                var message = $"User created: {result}";
-                var kafkaMessage = new Message<string, string>
+                var userResponse = new ResponseModel<UserResponce>
                 {
-                    Key = "user_created",
-                    Value = message
+                    Message = "User created successfully.",
+                    Data = new UserResponce // Assuming 'UserResponse' is the response model for user creation
+                    {
+                        FirstName = request.FirstName,
+                        LastName = request.LastName,
+                        Email = request.Email,
+                        Id=userId
+                    }
                 };
-                await _kafkaProducer.ProduceAsync(_configuration["Kafka:Topic"], kafkaMessage);
 
-                return Ok(message);
+                return Ok(userResponse);
             }
             catch (Exception ex)
             {
@@ -83,43 +66,8 @@ namespace FundooNotes.Controllers
             }
         }
 
-        private async Task ConsumeKafkaMessages(CancellationToken cancellationToken)
-        {
-            try
-            {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var consumeResult = _kafkaConsumer.Consume(cancellationToken);
-                    var message = consumeResult.Message.Value;
-                    Console.WriteLine($"Received Kafka message: {message}");
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Consumer cancellation requested
-            }
-            finally
-            {
-                _kafkaConsumer.Close();
-            }
-        }
 
-        [ApiExplorerSettings(IgnoreApi = true)]
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _kafkaProducer?.Dispose();
-                _kafkaConsumer?.Dispose();
-                _cancellationTokenSource?.Dispose();
-            }
-        }
 
 
         /*        [HttpPost]
@@ -130,33 +78,94 @@ namespace FundooNotes.Controllers
                        return Ok($"User create sucessfull : {await service.createUser(request)}");
                 }*/
 
-        [HttpGet("Login")]
+        [HttpPost("Login")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> Login(string Email, string password)
         {
-            var user = await service.Login(Email, password);
+            try
+            {
+                var user = await service.Login(Email, password);
 
-            //session creting
-            _httpContextAccessor.HttpContext.Session.SetString("UserName", user.FirstName);
+                // Check if user is found
+                if (user == null)
+                {
+                    return NotFound("User not found."); // You can customize this message as needed
+                }
 
-            var token = CreateToken(user);
-            return Ok($"Token Generated sucessfully{new { Token = token }}");
+                // Create a session for the user
+                _httpContextAccessor.HttpContext.Session.SetString("UserName", user.FirstName);
 
+                // Generate JWT token
+                var token = CreateToken(user);
+
+                // Return token along with success message
+                var response = new
+                {
+                    Token = token,
+                    UserName = user.FirstName, // Assuming FirstName contains the username
+                    Email = user.Email,
+                    Message = "Token generated successfully."
+                };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}");
+            }
         }
 
 
-        [HttpPut("ForgotPassword")]
+    [HttpPut("ForgotPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
-            return Ok($"{await service.ChangePasswordRequest(Email)}");
+            try
+            {
+                // Assuming service.ForgotPassword returns a string message
+                var responseMessage = await service.ChangePasswordRequest(Email);
+                return Ok(new ResponseModel<string>
+                {
+                    Success = true,
+                    Message = responseMessage,
+                    Data = Email
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel<object>
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}",
+                    Data = null
+                });
+            }
         }
 
-        [HttpPut("ResetPassword")]
+        [HttpPost("ResetPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePassword(String otp, String password)
         {
-            return Ok(await service.ChangePassword(otp, password));
+            try
+            {
+                // Assuming service.ResetPassword returns a string message
+                var responseMessage = await service.ChangePassword(otp, password);
+                return Ok(new ResponseModel<string>
+                {
+                    Success = true,
+                    Message = responseMessage
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel<object>
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
         }
 
         //JWt
@@ -187,12 +196,13 @@ namespace FundooNotes.Controllers
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, $"{user.FirstName}{user.LastName}")
+                new Claim(ClaimTypes.NameIdentifier, $"{user.Id}"),
+                new Claim(ClaimTypes.Email, $"{user.Email}")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddHours(1);
+            var expires = DateTime.UtcNow.AddDays(100);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],

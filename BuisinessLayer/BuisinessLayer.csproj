@@ -21,13 +21,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
   </ItemGroup>
 
+
   <ItemGroup>
     <ProjectReference Include="..\CommonLayer\ModelLayer.csproj" />
     <ProjectReference Include="..\RepositaryLayer\RepositaryLayer.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Filter\ActionFilter\" />
   </ItemGroup>
 
 </Project>
