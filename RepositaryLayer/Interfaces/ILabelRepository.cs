@@ -7,19 +7,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.Iservice
+namespace RepositaryLayer.Interface
 {
-    public interface ILabelService
+    public interface ILabelRepository
     {
-        public Task<ActionResult<LabelsRequest>> CreateLabel(string userId,LabelsRequest label);
+        public Task<ActionResult<LabelsRequest>> CreateLabel(string userId, LabelsRequest label);
         public Task<Label> EditLabel(Label label);
 
         Task<bool> DeleteLabelById(string userId, int labelId);
         Task<Label> GetLabelById(string userId, int labelId);
 
-        //need to implement
+
         public Task<List<Label>> GetUsersLabelsList(int userId);
         public Task<List<UserNote>> GetNotesByUserId(int userId);
 
+        public Task<bool> DeleteLabelsByUserNoteId(int userNoteId);
     }
 }

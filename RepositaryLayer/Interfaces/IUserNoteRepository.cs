@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RepositaryLayer.Repositary.IRepo
+namespace RepositaryLayer.Interface
 {
     public interface IUserNoteRepository
     {
@@ -27,5 +27,7 @@ namespace RepositaryLayer.Repositary.IRepo
 
         Task<bool> ArchiveUserNote(string userId, int noteId);
         Task<bool> TrashUserNote(string userId, int noteId);
+        Task<UserNoteRequest> ChangeNoteColor(string userId, int noteId, string color);
+
     }
 }

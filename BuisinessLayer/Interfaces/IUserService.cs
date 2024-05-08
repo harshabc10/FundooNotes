@@ -7,14 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.Iservice
+namespace BuisinessLayer.Interface
 {
     public interface IUserService
     {
         public Task<int> createUser(UserRequest request);
-        public Task<UserResponce> Login(String Email, String password);
-        public Task<String> ChangePasswordRequest(String Email);
-        Task<string> ChangePassword(string otp, String password);
+        public Task<UserResponce> Login(string Email, string password);
+        public Task<string> ChangePasswordRequest(string Email);
+        Task<string> ChangePassword(string otp, string password);
         //public Task<UserResponce> Authenticate(string email, string password);
     }
 }

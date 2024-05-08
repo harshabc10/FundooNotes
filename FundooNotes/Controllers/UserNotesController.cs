@@ -177,7 +177,7 @@ namespace FundooNotes.Controllers
 */
 
 
-using BuisinessLayer.service.Iservice;
+using BuisinessLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ModelLayer.Entity;
@@ -485,83 +485,119 @@ namespace FundooNotes.Controllers
             }
 
         }
+        [HttpPut("changecolor/{noteId}")]
+        public async Task<ActionResult<ResponseModel<UserNoteRequest>>> ChangeColor( int noteId, string color)
+        {
+            try
+            {
+                // Get the user ID from JWT claims
+                var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                {
+                    return Unauthorized("User ID not found in claims.");
+                }
+
+                // Call the service method to change the color of the user note
+                var updatedNote = await _noteService.ChangeNoteColor(userId, noteId, color);
+
+                // Prepare the response
+                var response = new ResponseModel<UserNoteRequest>
+                {
+                    Message = "Note Color Updated Successfully",
+                    Data = updatedNote
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                var response = new ResponseModel<UserNoteRequest>
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+                return StatusCode(500, response);
+            }
+        }
+
+
     }
 
-        //edit needed
+    //edit needed
 
-        /*
-                [HttpDelete("{noteId}")]
-                public async Task<ActionResult<ResponseModel<bool>>> DeleteUserNote(int noteId)
+    /*
+            [HttpDelete("{noteId}")]
+            public async Task<ActionResult<ResponseModel<bool>>> DeleteUserNote(int noteId)
+            {
+                try
                 {
-                    try
+                    // Get the user ID from JWT claims
+                    var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (userId == null)
                     {
-                        // Get the user ID from JWT claims
-                        var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                        if (userId == null)
-                        {
-                            return Unauthorized("User ID not found in claims.");
-                        }
-
-                        // Call the service method to delete the user note
-                        bool isDeleted = await _noteService.DeleteUserNote(userId, noteId);
-
-                        if (isDeleted)
-                        {
-                            var response = new ResponseModel<bool>
-                            {
-                                Message = "Note Deleted Successfully",
-                                Data = true
-                            };
-                            return Ok(response);
-                        }
-                        else
-                        {
-                            return NotFound(new ResponseModel<bool> { Message = "User note not found" });
-                        }
+                        return Unauthorized("User ID not found in claims.");
                     }
-                    catch (Exception ex)
+
+                    // Call the service method to delete the user note
+                    bool isDeleted = await _noteService.DeleteUserNote(userId, noteId);
+
+                    if (isDeleted)
                     {
                         var response = new ResponseModel<bool>
                         {
-                            Success = false,
-                            Message = ex.Message
-                        };
-                        return StatusCode(500, response);
-                    }
-                }
-
-                [HttpGet("ByNoteId")]
-                public async Task<ActionResult<ResponseModel<UserNote>>> GetUserNoteById(int id)
-                {
-                    try
-                    {
-                        var userNote = await _noteService.GetUserNoteById(id);
-
-                        if (userNote == null)
-                        {
-                            return NotFound(new ResponseModel<UserNote> { Message = "User note not found" });
-                        }
-
-                        var response = new ResponseModel<UserNote>
-                        {
-                            Message = "User note retrieved successfully",
-                            Data = userNote
+                            Message = "Note Deleted Successfully",
+                            Data = true
                         };
                         return Ok(response);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        var response = new ResponseModel<UserNote>
-                        {
-                            Success = false,
-                            Message = ex.Message,
-                        };
-                        return StatusCode(500, response);
+                        return NotFound(new ResponseModel<bool> { Message = "User note not found" });
                     }
-                }*/
+                }
+                catch (Exception ex)
+                {
+                    var response = new ResponseModel<bool>
+                    {
+                        Success = false,
+                        Message = ex.Message
+                    };
+                    return StatusCode(500, response);
+                }
+            }
+
+            [HttpGet("ByNoteId")]
+            public async Task<ActionResult<ResponseModel<UserNote>>> GetUserNoteById(int id)
+            {
+                try
+                {
+                    var userNote = await _noteService.GetUserNoteById(id);
+
+                    if (userNote == null)
+                    {
+                        return NotFound(new ResponseModel<UserNote> { Message = "User note not found" });
+                    }
+
+                    var response = new ResponseModel<UserNote>
+                    {
+                        Message = "User note retrieved successfully",
+                        Data = userNote
+                    };
+                    return Ok(response);
+                }
+                catch (Exception ex)
+                {
+                    var response = new ResponseModel<UserNote>
+                    {
+                        Success = false,
+                        Message = ex.Message,
+                    };
+                    return StatusCode(500, response);
+                }
+            }*/
 
 
-    }
+}
 
 
 /*

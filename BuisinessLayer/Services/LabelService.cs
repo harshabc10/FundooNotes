@@ -1,13 +1,13 @@
-﻿using BuisinessLayer.service.Iservice;
+﻿using BuisinessLayer.Interface;
 using Microsoft.AspNetCore.Mvc;
 using ModelLayer.Entity;
 using ModelLayer.Models.RequestDto;
-using RepositaryLayer.Repositary.IRepo;
+using RepositaryLayer.Interface;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.serviceImpl
+namespace BuisinessLayer.Services
 {
     public class LabelService : ILabelService
     {
@@ -18,10 +18,10 @@ namespace BuisinessLayer.service.serviceImpl
             _labelRepository = labelRepository;
         }
 
-        public async Task<ActionResult<LabelsRequest>> CreateLabel(string userId,LabelsRequest label)
+        public async Task<ActionResult<LabelsRequest>> CreateLabel(string userId, LabelsRequest label)
         {
             // Implement the logic to create a new label in the repository
-            var createdLabel= await _labelRepository.CreateLabel(userId,label);
+            var createdLabel = await _labelRepository.CreateLabel(userId, label);
             return createdLabel;
         }
 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RepositaryLayer.Repositary.IRepo
+namespace RepositaryLayer.Interface
 {
     public interface IUserRepo
     {

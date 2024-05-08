@@ -117,14 +117,14 @@ using ModelLayer.Models.RequestDto;
 using ModelLayer.Models.ResponceDto;
 using Newtonsoft.Json;
 using RepositaryLayer.Context;
-using RepositaryLayer.Repositary.IRepo;
+using RepositaryLayer.Interface;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RepositaryLayer.Repositary.RepoImpl
+namespace RepositaryLayer.Service
 {
     public class LabelRepository : ILabelRepository
     {

@@ -1,16 +1,16 @@
-﻿using BuisinessLayer.service.Iservice;
+﻿using BuisinessLayer.Interface;
 using Google.Apis.Gmail.v1;
 using ModelLayer.Entity;
 using ModelLayer.Models.RequestDto;
-using RepositaryLayer.Repositary.IRepo;
-using RepositaryLayer.Repositary.RepoImpl;
+using RepositaryLayer.Interface;
+using RepositaryLayer.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.serviceImpl
+namespace BuisinessLayer.Services
 {
     public class UserNoteService : IUserNoteService
     {
@@ -23,7 +23,7 @@ namespace BuisinessLayer.service.serviceImpl
             _labelRepository = labelRepository;
         }
 
-        public async Task<UserNoteRequest> AddUserNote(string userId,UserNoteRequest note)
+        public async Task<UserNoteRequest> AddUserNote(string userId, UserNoteRequest note)
         {
             // Validate input
             if (note == null)
@@ -40,7 +40,7 @@ namespace BuisinessLayer.service.serviceImpl
             try
             {
                 // Call repository method to add user note to the database
-                var addedNote = await _noteRepository.AddUserNote(userId,userNoteToAdd);
+                var addedNote = await _noteRepository.AddUserNote(userId, userNoteToAdd);
                 return addedNote;
             }
             catch (Exception ex)
@@ -51,7 +51,7 @@ namespace BuisinessLayer.service.serviceImpl
         }
 
 
-        public async Task<bool> DeleteUserNote(string userId,int id)
+        public async Task<bool> DeleteUserNote(string userId, int id)
         {
             try
             {
@@ -64,7 +64,7 @@ namespace BuisinessLayer.service.serviceImpl
                 }
 
                 // Call the repository method to delete the user note
-                bool isDeleted = await _noteRepository.DeleteUserNote(userId,id);
+                bool isDeleted = await _noteRepository.DeleteUserNote(userId, id);
                 return isDeleted;
             }
             catch (Exception ex)
@@ -181,22 +181,22 @@ namespace BuisinessLayer.service.serviceImpl
             throw new NotImplementedException();
         }
 
-/*        public async Task<bool> DeleteUserNoteByTitle(string title)
-        {
-            // Get the UserNoteId by title
-            int userNoteId = await _noteRepository.GetUserNoteIdByTitle(title);
-            if (userNoteId == 0)
-            {
-                // User note not found
-                return false;
-            }
+        /*        public async Task<bool> DeleteUserNoteByTitle(string title)
+                {
+                    // Get the UserNoteId by title
+                    int userNoteId = await _noteRepository.GetUserNoteIdByTitle(title);
+                    if (userNoteId == 0)
+                    {
+                        // User note not found
+                        return false;
+                    }
 
-            // Delete labels associated with the user note
-            await _labelRepository.DeleteLabelsByUserNoteId(userNoteId);
+                    // Delete labels associated with the user note
+                    await _labelRepository.DeleteLabelsByUserNoteId(userNoteId);
 
-            // Delete the user note
-            return await _noteRepository.DeleteUserNote(userNoteId);
-        }*/
+                    // Delete the user note
+                    return await _noteRepository.DeleteUserNote(userNoteId);
+                }*/
 
         // Implement other business logic methods as needed
 
@@ -295,6 +295,52 @@ namespace BuisinessLayer.service.serviceImpl
             {
                 // Log the exception or handle it as needed
                 throw new Exception("Error trashing user note.", ex);
+            }
+        }
+
+        public async Task<UserNoteRequest> ChangeNoteColor(string userId, int noteId, string color)
+        {
+            try
+            {
+                // Fetch the user note from the repository using Dapper
+                var existingNote = await _noteRepository.GetUserNoteById(noteId);
+
+                if (existingNote == null)
+                {
+                    throw new InvalidOperationException("User note not found.");
+                }
+
+                // Check if the note belongs to the requesting user
+                if (existingNote.UserId.ToString() != userId)
+                {
+                    throw new UnauthorizedAccessException("Unauthorized: User does not have permission to change color for this note.");
+                }
+
+                // Update the color of the existing note
+                existingNote.Color = color;
+
+                // Call the repository method to update the user note color using Dapper
+                var updatedNote = await _noteRepository.ChangeNoteColor(userId, noteId, color);
+
+                // Map the updated note to the request DTO
+                var updatedNoteRequest = new UserNoteRequest
+                {
+                    Title = updatedNote.Title,
+                    Description = updatedNote.Description,
+                    Color = updatedNote.Color,
+                    ImagePaths = updatedNote.ImagePaths,
+                    Reminder = updatedNote.Reminder,
+                    IsArchive = updatedNote.IsArchive,
+                    IsPinned = updatedNote.IsPinned,
+                    IsTrash = updatedNote.IsTrash
+                };
+
+                return updatedNoteRequest;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                throw new Exception("Error changing note color.", ex);
             }
         }
 

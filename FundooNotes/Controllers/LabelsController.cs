@@ -1,5 +1,5 @@
-﻿using BuisinessLayer.service.Iservice;
-using BuisinessLayer.service.serviceImpl;
+﻿using BuisinessLayer.Interface;
+using BuisinessLayer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

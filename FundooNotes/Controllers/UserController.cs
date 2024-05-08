@@ -1,6 +1,6 @@
 ﻿using BuisinessLayer.CustomException;
 using BuisinessLayer.Filter.ExceptionFilter;
-using BuisinessLayer.service.Iservice;
+using BuisinessLayer.Interface;
 using Confluent.Kafka;
 using Google.Apis.Gmail.v1.Data;
 using Microsoft.AspNetCore.Cors;
@@ -17,6 +17,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading;
+using static System.Net.WebRequestMethods;
 
 namespace FundooNotes.Controllers
 {
@@ -101,6 +102,8 @@ namespace FundooNotes.Controllers
                 var response = new
                 {
                     Token = token,
+                    UserName = user.FirstName, // Assuming FirstName contains the username
+                    Email = user.Email,
                     Message = "Token generated successfully."
                 };
                 return Ok(response);
@@ -117,14 +120,52 @@ namespace FundooNotes.Controllers
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePasswordRequest(String Email)
         {
-            return Ok($"{await service.ChangePasswordRequest(Email)}");
+            try
+            {
+                // Assuming service.ForgotPassword returns a string message
+                var responseMessage = await service.ChangePasswordRequest(Email);
+                return Ok(new ResponseModel<string>
+                {
+                    Success = true,
+                    Message = responseMessage,
+                    Data = Email
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel<object>
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}",
+                    Data = null
+                });
+            }
         }
 
         [HttpPost("ResetPassword")]
         [UserExceptionHandlerFilter]
         public async Task<IActionResult> ChangePassword(String otp, String password)
         {
-            return Ok(await service.ChangePassword(otp, password));
+            try
+            {
+                // Assuming service.ResetPassword returns a string message
+                var responseMessage = await service.ChangePassword(otp, password);
+                return Ok(new ResponseModel<string>
+                {
+                    Success = true,
+                    Message = responseMessage
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+                return StatusCode(StatusCodes.Status500InternalServerError, new ResponseModel<object>
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
+            }
         }
 
         //JWt

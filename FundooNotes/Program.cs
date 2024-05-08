@@ -1,5 +1,5 @@
-using BuisinessLayer.service.Iservice;
-using BuisinessLayer.service.serviceImpl;
+using BuisinessLayer.Interface;
+using BuisinessLayer.Services;
 using Confluent.Kafka;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -7,8 +7,8 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using NLog.Web;
 using RepositaryLayer.Context;
-using RepositaryLayer.Repositary.IRepo;
-using RepositaryLayer.Repositary.RepoImpl;
+using RepositaryLayer.Interface;
+using RepositaryLayer.Service;
 using StackExchange.Redis;
 using System.Text;
 

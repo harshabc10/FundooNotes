@@ -3,14 +3,13 @@ using ModelLayer.Entity;
 using ModelLayer.Models.RequestDto;
 using NLog;
 using RepositaryLayer.Context;
-using RepositaryLayer.Repositary;
-using RepositaryLayer.Repositary.IRepo;
+using RepositaryLayer.Interface;
 using System;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
 
-namespace RepositaryLayer.Repositary.RepoImpl
+namespace RepositaryLayer.Service
 {
     public class CollaboratorRepository : ICollaboratorRepository
     {
@@ -119,7 +118,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
 
                 using (var connection = _context.CreateConnection())
                 {
-                    int affectedRows = await connection.ExecuteAsync(sql, new { CollaboratorId = collaboratorId , UserId = userId });
+                    int affectedRows = await connection.ExecuteAsync(sql, new { CollaboratorId = collaboratorId, UserId = userId });
                     _logger.Info("Deleted Collaborators Successfully");
                     return affectedRows > 0;
 

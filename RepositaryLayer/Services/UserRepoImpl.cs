@@ -2,7 +2,6 @@
 using Dapper;
 using Microsoft.Extensions.Logging;
 using RepositaryLayer.Context;
-using RepositaryLayer.Repositary.IRepo;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,9 +12,10 @@ using NLog;
 using ILogger = NLog.ILogger;
 using Confluent.Kafka;
 using RepositaryLayer.Helper;
+using RepositaryLayer.Interface;
 
 
-namespace RepositaryLayer.Repositary.RepoImpl
+namespace RepositaryLayer.Service
 {
     public class UserRepoImpl : IUserRepo
     {
@@ -23,7 +23,7 @@ namespace RepositaryLayer.Repositary.RepoImpl
         private readonly ILogger logger; // Logger instance
         public UserRepoImpl(DapperContext contex, ILogger<UserRepoImpl> logger)
         {
-            this.context = contex;
+            context = contex;
             this.logger = LogManager.GetCurrentClassLogger();
         }
 
@@ -31,14 +31,20 @@ namespace RepositaryLayer.Repositary.RepoImpl
         {
             try
             {
-                string query = "insert into Users values (@UserFirstName, @UserLastName, @UserEmail, @UserPassword); SELECT SCOPE_IDENTITY()";
                 var connection = context.CreateConnection();
 
-                //return await connection.ExecuteAsync(query, entity);
-                int userId = await connection.ExecuteScalarAsync<int>(query, entity);
+                // Call the stored procedure to create a user
+                var parameters = new DynamicParameters();
+                parameters.Add("@UserFirstName", entity.UserFirstName);
+                parameters.Add("@UserLastName", entity.UserLastName);
+                parameters.Add("@UserEmail", entity.UserEmail);
+                parameters.Add("@UserPassword", entity.UserPassword);
+
+                int userId = await connection.ExecuteScalarAsync<int>("CreateUserProc", parameters, commandType: CommandType.StoredProcedure);
 
                 // Log information message
                 logger.Info("User created successfully. UserId: {0}", userId);
+
 
                 //---------------------------
                 var registrationDetailsForPublishing = new RegistrationDetailsForPublishing(entity);
@@ -95,25 +101,52 @@ namespace RepositaryLayer.Repositary.RepoImpl
 
         public async Task<UserEntity> GetUserByEmail(string email)
         {
-            String Query = "Select * from Users where UserEmail = @Email";
-            IDbConnection connection = context.CreateConnection();
+            try
+            {
+                var connection = context.CreateConnection();
 
-            // Log information message
-            logger.Info("Getting user by email: {0}", email);
+                // Call the stored procedure to get a user by email
+                var parameters = new DynamicParameters();
+                parameters.Add("@Email", email);
 
-            return await connection.QueryFirstAsync<UserEntity>(Query, new { Email = email });
+                // Log information message
+                logger.Info("Getting user by email: {0}", email);
+
+                return await connection.QueryFirstAsync<UserEntity>("GetUserByEmailProc", parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                logger.Error(ex, "Error occurred while getting user by email.");
+                throw; // Rethrow the exception
+            }
         }
 
-        public async Task<int> UpdatePassword(string mailid, string password)
+
+        public async Task<int> UpdatePassword(string email, string newPassword)
         {
-            String Query = "update Users set UserPassword = @Password where UserEmail = @mail";
-            IDbConnection connection = context.CreateConnection();
-            int rowsAffected = await connection.ExecuteAsync(Query, new { mail = mailid, Password = password });
+            try
+            {
+                var connection = context.CreateConnection();
 
-            // Log information message
-            logger.Info("Password updated successfully for email: {0}. Rows affected: {1}", mailid, rowsAffected);
+                // Call the stored procedure to update a user's password
+                var parameters = new DynamicParameters();
+                parameters.Add("@Email", email);
+                parameters.Add("@Password", newPassword);
 
-            return rowsAffected;
+                int rowsAffected = await connection.ExecuteAsync("UpdatePasswordProc", parameters, commandType: CommandType.StoredProcedure);
+
+                // Log information message
+                logger.Info("Password updated successfully for email: {0}. Rows affected: {1}", email, rowsAffected);
+
+                return rowsAffected;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                logger.Error(ex, "Error occurred while updating password.");
+                throw; // Rethrow the exception
+            }
         }
 
     }

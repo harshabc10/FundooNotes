@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.Iservice
+namespace BuisinessLayer.Interface
 {
     public interface ICollaboratorService
     {

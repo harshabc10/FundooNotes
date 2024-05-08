@@ -46,7 +46,7 @@ namespace FundooNotes.Controllers
 }
 */
 
-using BuisinessLayer.service.Iservice;
+using BuisinessLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

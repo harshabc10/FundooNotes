@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RepositaryLayer.Repositary.IRepo
+namespace RepositaryLayer.Interface
 {
     public interface ICollaboratorRepository
     {
-        public Task<CollaboratorRequest> AddCollaborator(string userId,CollaboratorRequest collaborator);
+        public Task<CollaboratorRequest> AddCollaborator(string userId, CollaboratorRequest collaborator);
 
         Task<bool> DeleteCollaboratorById(string userId, int collaboratorId);
 

@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.Iservice
+namespace BuisinessLayer.Interface
 {
     public interface IUserNoteService
     {
-        public Task<UserNoteRequest> AddUserNote(string userId,UserNoteRequest note);
+        public Task<UserNoteRequest> AddUserNote(string userId, UserNoteRequest note);
         public Task<bool> DeleteUserNote(string userId, int noteId);
         Task<UserNote> UpdateUserNote(string userId, int noteId, UserNoteRequest noteRequest);
         public Task<UserNote> GetUserNoteById(int id);
@@ -29,6 +29,8 @@ namespace BuisinessLayer.service.Iservice
 
         Task<bool> ArchiveUserNote(string userId, int noteId);
         Task<bool> TrashUserNote(string userId, int noteId);
+        Task<UserNoteRequest> ChangeNoteColor(string userId, int noteId, string color);
+
     }
 
 }

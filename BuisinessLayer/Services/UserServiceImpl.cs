@@ -216,13 +216,13 @@ namespace BuisinessLayer.service.serviceImpl
 */
 
 using BuisinessLayer.CustomException;
+using BuisinessLayer.Interface;
 using BuisinessLayer.MailSender;
-using BuisinessLayer.service.Iservice;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ModelLayer.Entity;
 using RepositaryLayer.DTO.RequestDto;
-using RepositaryLayer.Repositary.IRepo;
+using RepositaryLayer.Interface;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -231,7 +231,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.serviceImpl
+namespace BuisinessLayer.Services
 {
     public class UserServiceImpl : IUserService
     {
@@ -258,16 +258,16 @@ namespace BuisinessLayer.service.serviceImpl
             };
         }
 
-        private String Encrypt(String password)
+        private string Encrypt(string password)
         {
             byte[] passByte = Encoding.UTF8.GetBytes(password);
             return Convert.ToBase64String(passByte);
         }
 
-        private String Decrypt(String encryptedPass)
+        private string Decrypt(string encryptedPass)
         {
             byte[] passbyte = Convert.FromBase64String(encryptedPass);
-            String res = Encoding.UTF8.GetString(passbyte);
+            string res = Encoding.UTF8.GetString(passbyte);
             return res;
         }
 
@@ -278,7 +278,7 @@ namespace BuisinessLayer.service.serviceImpl
                 FirstName = response.UserFirstName,
                 LastName = response.UserLastName,
                 Email = response.UserEmail,
-                Id=response.UserId
+                Id = response.UserId
             };
         }
 
@@ -312,7 +312,7 @@ namespace BuisinessLayer.service.serviceImpl
             }
         }
 
-        public async Task<String> ChangePasswordRequest(string Email)
+        public async Task<string> ChangePasswordRequest(string Email)
         {
             try
             {

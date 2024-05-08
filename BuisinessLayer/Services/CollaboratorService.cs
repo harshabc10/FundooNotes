@@ -1,22 +1,22 @@
-﻿using BuisinessLayer.service.Iservice;
+﻿using BuisinessLayer.Interface;
 using Google.Apis.Gmail.v1;
 using Microsoft.Extensions.Logging;
 using ModelLayer.Entity;
 using ModelLayer.Models.RequestDto;
-using RepositaryLayer.Repositary.IRepo;
+using RepositaryLayer.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BuisinessLayer.service.serviceImpl
+namespace BuisinessLayer.Services
 {
     public class CollaboratorService : ICollaboratorService
     {
         private readonly ICollaboratorRepository _collaboratorRepository;
-        private readonly ILogger <CollaboratorService> _logger;
-        
+        private readonly ILogger<CollaboratorService> _logger;
+
 
         public CollaboratorService(ICollaboratorRepository collaboratorRepository, ILogger<CollaboratorService> logger)
         {
@@ -29,7 +29,7 @@ namespace BuisinessLayer.service.serviceImpl
             // Validate input (optional)
 
             // Add collaborator to the repository
-            var addedCollaborator = await _collaboratorRepository.AddCollaborator(userId,collaborator);
+            var addedCollaborator = await _collaboratorRepository.AddCollaborator(userId, collaborator);
 
             // Send invitation email to the collaborator
             /*await SendCollaboratorInvitationEmail(collaborator.CollaboratorEmail);*/
@@ -40,7 +40,7 @@ namespace BuisinessLayer.service.serviceImpl
         public async Task<bool> DeleteCollaboratorById(string userId, int collaboratorId)
         {
             // Delete collaborator from the repository
-            var isDeleted = await _collaboratorRepository.DeleteCollaboratorById(userId,collaboratorId);
+            var isDeleted = await _collaboratorRepository.DeleteCollaboratorById(userId, collaboratorId);
 
             return isDeleted;
         }
@@ -48,7 +48,7 @@ namespace BuisinessLayer.service.serviceImpl
         public async Task<Collaborator> GetCollaboratorById(string userId, int collaboratorId)
         {
             // Get collaborator from the repository
-            var collaborator = await _collaboratorRepository.GetCollaboratorById(userId,collaboratorId);
+            var collaborator = await _collaboratorRepository.GetCollaboratorById(userId, collaboratorId);
 
             return collaborator;
         }
